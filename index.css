@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    --scheme: light;
+    --shadow: 240 5.9% 70%;
+  }
+
+  .dark {
+    --scheme: dark;
+    --shadow: 240 3.7% 20%;
+  }
+}
+
+@layer base {
+  * {
+    color-scheme: var(--scheme);
+  }
+  body {
+    @apply bg-base-100 text-base-content;
+  }
+}
+
+@layer utilities {
+}

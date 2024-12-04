@@ -1,0 +1,11 @@
+package components
+
+import "github.com/FrancescoLuzzi/AQuickQuestion/app/views/icons"
+
+templ ThemeToggle() {
+	<label class="swap swap-rotate">
+		<input type="checkbox" @click="toggleTheme" :checked="theme === 'dark'"/>
+		@icons.LightIcon()
+		@icons.DarkIcon()
+	</label>
+}

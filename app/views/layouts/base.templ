@@ -1,0 +1,28 @@
+package layouts
+
+import "github.com/FrancescoLuzzi/AQuickQuestion/public"
+
+var (
+	title = "superkit project"
+)
+
+templ BaseLayout() {
+	<!DOCTYPE html>
+	<html lang="en" x-data="theme" :data-theme="theme">
+		<head>
+			<title>{ title }</title>
+			<link rel="icon" type="image/x-icon" href={ public.Asset("favicon.ico") }/>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<link rel="stylesheet" href={ public.Asset("styles.css.gz") }/>
+			<script src={ public.Asset("index.js.gz") } defer></script>
+			<!-- ALPINE -->
+			// <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<!-- HTMX -->
+			<script src="https://unpkg.com/htmx.org@2.0.3" defer></script>
+		</head>
+		<body lang="en">
+			{ children... }
+		</body>
+	</html>
+}

@@ -1,0 +1,17 @@
+package layouts
+
+import (
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/app_context"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/components"
+)
+
+templ App() {
+	if app_context.ShowLayout(ctx) {
+		@BaseLayout() {
+			@components.Navbar(false)
+			{ children... }
+		}
+	} else {
+		{ children... }
+	}
+}

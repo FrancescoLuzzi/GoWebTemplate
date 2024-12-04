@@ -1,0 +1,28 @@
+package landing
+
+import (
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/icons"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/layouts"
+)
+
+templ Signup() {
+	@layouts.App() {
+		<form hx-post="/signup">
+			<label class="input input-bordered flex items-center gap-2">
+				@icons.Postcard()
+				<input type="text" name="email" class="grow" placeholder="Email"/>
+			</label>
+			<label class="input input-bordered flex items-center gap-2">
+				@icons.PassKey()
+				<input type="password" name="password" class="grow" placeholder="password"/>
+			</label>
+			<label class="input input-bordered flex items-center gap-2">
+				<input type="text" name="firstName" class="grow" placeholder="FirstName"/>
+			</label>
+			<label class="input input-bordered flex items-center gap-2">
+				<input type="text" name="lastName" class="grow" placeholder="LastName"/>
+			</label>
+			<button type="submit">Signup</button>
+		</form>
+	}
+}

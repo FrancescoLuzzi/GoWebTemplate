@@ -1,20 +1,20 @@
 # AQuickQuestion
 
 - backend:
-  - gin
+  - fiber
   - aargon2
-  - jwt
-  - rest apis (minimal since most is htmx compliant)
-  - websockets (to handle responses and give the option ot pause/resume questions max 1week?)
+  - jwt:
+    - refresh token (httpOnly, httpsOnly, cookie ~30d)
+      when the token expires the user must authenticate again
+    - access token (saved in the local process ~15min)
+      this token can be lost and remade on demand as long the refresh token is valid
+      the server will first check if the access token is valid/present, if not,
+      it will create a new access token that the client can use in the following calls
+      (usually a dedicatated endpoint /api/token/refresh)
 - db:
   - pg
-  - sqlite3
 - frontend:
   - templ
   - htmx
   - alpine
   - ts
-
-## Resources
-
-https://alpinejs.dev/globals/alpine-data
