@@ -2,12 +2,12 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/FrancescoLuzzi/AQuickQuestion/app"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/db"
 	"github.com/FrancescoLuzzi/AQuickQuestion/public"
-	"github.com/gofiber/fiber/v3"
 	"github.com/joho/godotenv"
 )
 
@@ -23,19 +23,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fiberApp := fiber.New(fiber.Config{
-		CompressedFileSuffixes: map[string]string{
-			"gzip": ".gz",
-			"br":   ".br",
-			"zstd": ".zst",
-		},
-		ErrorHandler: func(c fiber.Ctx, err error) error {
-			return c.Status(c.Response().StatusCode()).JSON(map[string]string{
-				"message": err.Error(),
-			})
-		},
-	})
-	public.RegisterAssets(fiberApp)
-	app.InitializeRoutes(fiberApp.Group("/"), conf, db)
-	fiberApp.Listen(":8080")
+	mux := http.NewServeMux()
+	appMux := app.InitializeRoutes(conf, db)
+	mux.Handle("/", appMux)
+	mux.Handle("/public/assets/", public.FixCompressedContentHeaders(http.StripPrefix("/public/assets/", http.FileServerFS(public.AssetFs()))))
+	http.ListenAndServe(":8080", mux)
 }

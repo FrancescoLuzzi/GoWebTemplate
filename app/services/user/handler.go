@@ -1,7 +1,8 @@
 package user
 
 import (
-	"log"
+	"encoding/json"
+	"log/slog"
 	"net/http"
 	"unicode"
 	"unicode/utf8"
@@ -10,7 +11,7 @@ import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/services/auth"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
 	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v3"
+	"github.com/gorilla/schema"
 )
 
 type (
@@ -34,6 +35,7 @@ type (
 )
 
 var validate = validator.New(validator.WithRequiredStructEnabled())
+var decoder = schema.NewDecoder()
 
 func registerPasswordValidation(v *validator.Validate) {
 	v.RegisterValidation("password", func(fl validator.FieldLevel) bool {
@@ -75,26 +77,38 @@ func NewHandler(store types.UserStore) Handler {
 	return Handler{store}
 }
 
-func (h *Handler) RegisterRoutes(router fiber.Router, cfg config.AppConfig) {
+func (h *Handler) GetRoutes(cfg config.AppConfig) *http.ServeMux {
+	mux := http.NewServeMux()
 	registerPasswordValidation(validate)
-	router.Post("/login", h.handleLogin(&cfg.JWTConfig))
-	router.Post("/signup", h.handleSignup)
+	mux.HandleFunc("POST /login", h.handleLogin(&cfg.JWTConfig))
+	mux.HandleFunc("POST /signup", h.handleSignup)
 
+	withJWT := auth.CreateJWTAuthHandler(h.store, &cfg.JWTConfig)
 	// admin routes
-	router.Get("/profile", h.handleCurrentUserProfile, auth.WithJWTAuth(h.store, &cfg.JWTConfig))
+	mux.HandleFunc("GET /profile", withJWT(h.handleCurrentUserProfile))
+	return mux
 }
 
-func (h *Handler) handleSignup(ctx fiber.Ctx) error {
-	var credentials UserSignup
-	if err := ctx.Bind().Body(&credentials); err != nil {
-		return err
+func (h *Handler) handleSignup(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	if err := validate.Struct(&credentials); err != nil {
-		return err
+	var credentials UserSignup
+
+	if err = decoder.Decode(&credentials, r.PostForm); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err = validate.Struct(&credentials); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	passwordHash, err := auth.HashPassword(credentials.Password, &auth.DefaultConf)
 	if err != nil {
-		return err
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	user := types.User{
 		Password:  passwordHash,
@@ -102,72 +116,88 @@ func (h *Handler) handleSignup(ctx fiber.Ctx) error {
 		FirstName: credentials.Email,
 		LastName:  credentials.LastName,
 	}
-	uid, err := h.store.Create(ctx.Context(), &user)
+	uid, err := h.store.Create(r.Context(), &user)
 	if err != nil {
-		return err
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	return ctx.JSON(map[string]string{
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
 		"userId": uid.String(),
 	})
 }
 
-func (h *Handler) handleLogin(cfg *config.JWTConfig) fiber.Handler {
-	return func(ctx fiber.Ctx) error {
+func (h *Handler) handleLogin(cfg *config.JWTConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		var credentials UserLogin
-		if err := ctx.Bind().Body(&credentials); err != nil {
-			return err
+		if err = decoder.Decode(&credentials, r.PostForm); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 		if err := validate.Struct(&credentials); err != nil {
-			return err
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
-		user, err := h.store.GetByEmail(ctx.Context(), &credentials.Email)
+		user, err := h.store.GetByEmail(r.Context(), &credentials.Email)
 		if err != nil {
-			return err
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		valid, err := auth.ValidatePassword(credentials.Password, user.Password)
 		if err != nil {
-			log.Printf("%v\n", err)
-			ctx.Status(http.StatusBadRequest)
-			return err
+			slog.Info("couldn't validate password", "err", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 		if !valid {
-			log.Println("password not valid")
-			ctx.Status(http.StatusBadRequest)
-			return nil
+			slog.Info("password not valid")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 		authToken, authExp, err := auth.CreateJWT(user.Id, auth.AuthToken, cfg)
 		if err != nil {
-			return err
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		refreshToken, refreshExp, err := auth.CreateJWT(user.Id, auth.RefreshToken, cfg)
 		if err != nil {
-			return err
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		ctx.Cookie(&fiber.Cookie{
+		http.SetCookie(w, &http.Cookie{
 			Name:     auth.AuthTokenCookie,
 			Value:    refreshToken,
 			Expires:  refreshExp,
-			SameSite: "strict",
-			HTTPOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			HttpOnly: true,
 			Secure:   true,
 		})
-		return ctx.JSON(map[string]any{
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
 			"token": authToken,
 			"exp":   authExp,
 		})
 	}
 }
 
-func (h *Handler) handleCurrentUserProfile(ctx fiber.Ctx) error {
+func (h *Handler) handleCurrentUserProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	userId, err := auth.UserFromCtx(ctx)
 	if err != nil {
-		return err
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	user, err := h.store.GetById(ctx.Context(), &userId)
+	user, err := h.store.GetById(ctx, &userId)
 	if err != nil {
-		log.Printf("failed to get user by id: %v\n", err)
-		ctx.Status(http.StatusBadRequest)
-		return err
+		slog.Info("failed to get user by id: %v\n", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	return ctx.JSON(user)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }

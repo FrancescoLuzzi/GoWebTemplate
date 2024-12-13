@@ -12,8 +12,8 @@ var LayoutCtxKey contextKey = "showTemplLayout"
 var UserCtxKey contextKey = "loggedUser"
 
 func ShowLayout(ctx context.Context) bool {
-	if showLayout, ok := ctx.Value(LayoutCtxKey).(bool); ok {
-		return showLayout
+	if hasHxRequest, ok := ctx.Value(LayoutCtxKey).(bool); ok {
+		return !hasHxRequest
 	}
 	return true
 }

@@ -1,8 +1,9 @@
 package auth
 
 import (
+	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/utils"
-	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -29,31 +29,35 @@ const (
 
 var errMissingToken error = fmt.Errorf("missing auth token")
 
-func WithJWTAuth(store types.UserStore, cfg *config.JWTConfig) fiber.Handler {
-	return func(ctx fiber.Ctx) error {
-		tokenString, err := GetTokenFromRequest(ctx)
-		if err != nil {
-			return err
-		}
+func CreateJWTAuthHandler(store types.UserStore, cfg *config.JWTConfig) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			tokenString, err := GetTokenFromRequest(r)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 
-		token, err := validateJWT(tokenString, cfg)
-		if err != nil {
-			log.Printf("failed to validate token: %v", err)
-			ctx.Status(http.StatusUnauthorized)
-			return err
-		}
+			token, err := validateJWT(tokenString, cfg)
+			if err != nil {
+				slog.Info("failed to validate token")
+				http.Error(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
 
-		if !token.Valid {
-			log.Println("invalid token")
-			ctx.Status(http.StatusUnauthorized)
-			return fmt.Errorf("invalid token")
-		}
+			if !token.Valid {
+				slog.Info("invalid token")
+				http.Error(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
 
-		claims := token.Claims.(jwt.MapClaims)
-		userId := claims["userId"].(uuid.UUID)
-		// Add the user to the context
-		ctx.Locals(app_context.UserCtxKey, userId)
-		return nil
+			claims := token.Claims.(jwt.MapClaims)
+			userId := claims["userId"].(uuid.UUID)
+			// Add the user to the context
+			ctx := context.WithValue(r.Context(), app_context.UserCtxKey, userId)
+			r = r.WithContext(ctx)
+			next.ServeHTTP(w, r)
+		}
 	}
 }
 
@@ -78,16 +82,16 @@ func validateJWT(tokenString string, cfg *config.JWTConfig) (*jwt.Token, error) 
 	})
 }
 
-func UserFromCtx(ctx fiber.Ctx) (uuid.UUID, error) {
-	userId, ok := ctx.Locals(app_context.UserCtxKey).(uuid.UUID)
+func UserFromCtx(ctx context.Context) (uuid.UUID, error) {
+	userId, ok := ctx.Value(app_context.UserCtxKey).(uuid.UUID)
 	if !ok {
 		return uuid.Nil, fmt.Errorf("user not set or malformed")
 	}
 	return userId, nil
 }
 
-func GetTokenFromRequest(ctx fiber.Ctx) (string, error) {
-	token := ctx.Get(AuthTokenHeader)
+func GetTokenFromRequest(r *http.Request) (string, error) {
+	token := r.Header.Get(AuthTokenHeader)
 	if token == "" {
 		return "", errMissingToken
 	} else {

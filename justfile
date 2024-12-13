@@ -35,10 +35,12 @@ setup-dev-env:
 
 db-up:
     @docker compose -f docker/docker-compose.yaml up -d
-    @goose pgx -dir ./schema/migrations up
 
 db-down:
     @docker compose -f docker/docker-compose.yaml down
+
+db-migrate:
+    @goose pgx -dir ./schema/migrations up
 
 db-seed:
     @goose pgx -dir ./schema/seed -no-versioning up

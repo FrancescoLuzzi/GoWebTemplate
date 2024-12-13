@@ -1,7 +1,7 @@
 # AQuickQuestion
 
 - backend:
-  - fiber
+  - net/http
   - aargon2
   - jwt:
     - refresh token (httpOnly, httpsOnly, cookie ~30d)
