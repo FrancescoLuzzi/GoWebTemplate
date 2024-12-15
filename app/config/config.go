@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -51,8 +52,9 @@ type JWTConfig struct {
 }
 
 type ServerConfig struct {
-	Host string
-	Port string
+	Host     string
+	Port     string
+	LogLevel *slog.LevelVar
 }
 
 type AppConfig struct {
@@ -80,6 +82,17 @@ func getEnvAsInt64(key string, fallback int64) int64 {
 	}
 
 	return fallback
+}
+
+func getEnvLevelVar(key string, fallback slog.Level) *slog.LevelVar {
+	var levelVar slog.LevelVar
+	level := fallback
+	if value, ok := os.LookupEnv(key); ok {
+		level.UnmarshalText([]byte(value))
+	}
+	levelVar.Set(level)
+
+	return &levelVar
 }
 
 func jwtFromEnv() JWTConfig {

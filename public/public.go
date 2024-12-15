@@ -7,8 +7,10 @@ import (
 	"path"
 )
 
-func Asset(name string) string {
-	return fmt.Sprintf("/public/assets/%s", name)
+func init() {
+	mime.AddExtensionType(".js", "text/javascript; charset=utf-8")
+	mime.AddExtensionType(".css", "text/css; charset=utf-8")
+	mime.AddExtensionType(".json", "text/json; charset=utf-8")
 }
 
 var compressExtensions = map[string]string{
@@ -17,10 +19,14 @@ var compressExtensions = map[string]string{
 	"zstd": ".zst",
 }
 
-func init() {
-	mime.AddExtensionType(".js", "text/javascript; charset=utf-8")
-	mime.AddExtensionType(".css", "text/css; charset=utf-8")
-	mime.AddExtensionType(".json", "text/json; charset=utf-8")
+const (
+	contentEncodingHeader = "Content-Encoding"
+	contentTypeHeader     = "Content-Type"
+	cacheControlHeader    = "Cache-Control"
+)
+
+func Asset(name string) string {
+	return fmt.Sprintf("/public/assets/%s", name)
 }
 
 func searchExtensionEncoding(ext string, encodings map[string]string) string {
@@ -31,11 +37,6 @@ func searchExtensionEncoding(ext string, encodings map[string]string) string {
 	}
 	return ""
 }
-
-const (
-	contentEncodingHeader = "Content-Encoding"
-	contentTypeHeader     = "Content-Type"
-)
 
 func FixCompressedContentHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +54,21 @@ func FixCompressedContentHeaders(next http.Handler) http.Handler {
 				w.Header().Set(contentTypeHeader, enc)
 			}
 		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func DisableCacheHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set(cacheControlHeader, "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func CacheHandler(next http.Handler, maxAge uint) http.Handler {
+	cacheValue := fmt.Sprintf("max-age=%d, must-revalidate", maxAge)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set(cacheControlHeader, cacheValue)
 		next.ServeHTTP(w, r)
 	})
 }
