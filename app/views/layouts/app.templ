@@ -1,12 +1,12 @@
 package layouts
 
 import (
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/app_context"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/app_ctx"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/components"
 )
 
 templ App() {
-	if app_context.ShowLayout(ctx) {
+	if app_ctx.ShowLayout(ctx) {
 		@BaseLayout() {
 			@components.Navbar(false)
 			{ children... }

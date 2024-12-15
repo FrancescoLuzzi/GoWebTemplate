@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/app_context"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/app_ctx"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/utils"
@@ -46,15 +46,14 @@ func CreateJWTAuthHandler(store types.UserStore, cfg *config.JWTConfig) func(htt
 			}
 
 			if !token.Valid {
-				slog.Info("invalid token")
-				http.Error(w, err.Error(), http.StatusUnauthorized)
+				http.Error(w, "invalid token", http.StatusUnauthorized)
 				return
 			}
 
 			claims := token.Claims.(jwt.MapClaims)
 			userId := claims["userId"].(uuid.UUID)
 			// Add the user to the context
-			ctx := context.WithValue(r.Context(), app_context.UserCtxKey, userId)
+			ctx := context.WithValue(r.Context(), app_ctx.UserCtxKey, userId)
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
 		}
@@ -83,7 +82,7 @@ func validateJWT(tokenString string, cfg *config.JWTConfig) (*jwt.Token, error) 
 }
 
 func UserFromCtx(ctx context.Context) (uuid.UUID, error) {
-	userId, ok := ctx.Value(app_context.UserCtxKey).(uuid.UUID)
+	userId, ok := ctx.Value(app_ctx.UserCtxKey).(uuid.UUID)
 	if !ok {
 		return uuid.Nil, fmt.Errorf("user not set or malformed")
 	}
