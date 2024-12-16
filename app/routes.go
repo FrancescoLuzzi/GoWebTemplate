@@ -17,7 +17,7 @@ func InitializeRoutes(conf config.AppConfig, db *sqlx.DB) *http.ServeMux {
 	mux.Handle("GET /signup", htmx.TrapHxRequest(utils.RenderComponentHandler(landing.Signup())))
 	mux.Handle("GET /login", htmx.TrapHxRequest(utils.RenderComponentHandler(landing.Login())))
 
-	userHandler := user.NewHandler(user.NewUserStore(db))
-	mux.Handle("/", userHandler.GetRoutes(conf))
+	userHandler := user.NewHandler(user.NewUserStore(db), &conf)
+	mux.Handle("/", userHandler.GetRoutes())
 	return mux
 }

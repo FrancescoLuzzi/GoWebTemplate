@@ -70,22 +70,27 @@ func registerPasswordValidation(v *validator.Validate) {
 }
 
 type Handler struct {
+	cfg   *config.AppConfig
 	store types.UserStore
 }
 
-func NewHandler(store types.UserStore) Handler {
-	return Handler{store}
+func NewHandler(store types.UserStore, cfg *config.AppConfig) Handler {
+	return Handler{
+		cfg:   cfg,
+		store: store,
+	}
 }
 
-func (h *Handler) GetRoutes(cfg config.AppConfig) *http.ServeMux {
+func (h *Handler) GetRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 	registerPasswordValidation(validate)
-	mux.HandleFunc("POST /login", h.handleLogin(&cfg.JWTConfig))
+	mux.HandleFunc("POST /login", h.handleLogin)
 	mux.HandleFunc("POST /signup", h.handleSignup)
 
-	withJWT := auth.CreateJWTAuthHandler(h.store, &cfg.JWTConfig)
+	withJWT := auth.CreateJWTAuthHandler(h.store, &h.cfg.JWTConfig)
 	// admin routes
 	mux.HandleFunc("GET /profile", withJWT(h.handleCurrentUserProfile))
+	mux.HandleFunc("GET /refresh", withJWT(h.handleRefreshJWT))
 	return mux
 }
 
@@ -127,61 +132,78 @@ func (h *Handler) handleSignup(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) handleLogin(cfg *config.JWTConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseForm()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		var credentials UserLogin
-		if err = decoder.Decode(&credentials, r.PostForm); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		if err := validate.Struct(&credentials); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		user, err := h.store.GetByEmail(r.Context(), &credentials.Email)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		valid, err := auth.ValidatePassword(credentials.Password, user.Password)
-		if err != nil {
-			slog.Info("couldn't validate password", "err", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		if !valid {
-			http.Error(w, "password not valid", http.StatusBadRequest)
-			return
-		}
-		authToken, authExp, err := auth.CreateJWT(user.Id, auth.AuthToken, cfg)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		refreshToken, refreshExp, err := auth.CreateJWT(user.Id, auth.RefreshToken, cfg)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		http.SetCookie(w, &http.Cookie{
-			Name:     auth.AuthTokenCookie,
-			Value:    refreshToken,
-			Expires:  refreshExp,
-			SameSite: http.SameSiteLaxMode,
-			HttpOnly: true,
-			Secure:   true,
-		})
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
-			"token": authToken,
-			"exp":   authExp,
-		})
+func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+	var credentials UserLogin
+	if err = decoder.Decode(&credentials, r.PostForm); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := validate.Struct(&credentials); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	user, err := h.store.GetByEmail(r.Context(), &credentials.Email)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	valid, err := auth.ValidatePassword(credentials.Password, user.Password)
+	if err != nil {
+		slog.Info("couldn't validate password", "err", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !valid {
+		http.Error(w, "password not valid", http.StatusBadRequest)
+		return
+	}
+	authToken, authExp, err := auth.CreateJWT(user.Id, auth.AuthToken, &h.cfg.JWTConfig)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	refreshToken, refreshExp, err := auth.CreateJWT(user.Id, auth.RefreshToken, &h.cfg.JWTConfig)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     auth.AuthTokenCookie,
+		Value:    refreshToken,
+		Expires:  refreshExp,
+		SameSite: http.SameSiteLaxMode,
+		HttpOnly: true,
+		Secure:   true,
+	})
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"token": authToken,
+		"exp":   authExp,
+	})
+}
+
+func (h *Handler) handleRefreshJWT(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userId, err := auth.UserFromCtx(ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	authToken, authExp, err := auth.CreateJWT(userId, auth.AuthToken, &h.cfg.JWTConfig)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"token": authToken,
+		"exp":   authExp,
+	})
 }
 
 func (h *Handler) handleCurrentUserProfile(w http.ResponseWriter, r *http.Request) {
