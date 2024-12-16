@@ -36,6 +36,6 @@ func NewLoggingMiddleware(handler http.Handler) http.Handler {
 		w2 := newLoggingResponseWriter(w)
 		start := time.Now()
 		handler.ServeHTTP(w2, r)
-		slog.Info("incoming request", "mehod", r.Method, "url", r.URL, "status", w2.Code, "duration", time.Since(start).String())
+		slog.Info("incoming request", "mehod", r.Method, "url", r.URL.Path, "status", w2.Code, "duration", time.Since(start).String())
 	})
 }

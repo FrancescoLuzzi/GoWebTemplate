@@ -117,8 +117,9 @@ func dbFromEnv() DbConfig {
 
 func serverFromEnv() ServerConfig {
 	return ServerConfig{
-		Host: getEnv("HOST", "http://localhost"),
-		Port: getEnv("PORT", "8080"),
+		Host:     getEnv("HOST", "http://localhost"),
+		Port:     getEnv("PORT", "8080"),
+		LogLevel: getEnvLevelVar("LOG", slog.LevelInfo),
 	}
 }
 

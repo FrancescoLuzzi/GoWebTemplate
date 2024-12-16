@@ -37,9 +37,9 @@ func main() {
 		log.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	appMux := app.InitializeRoutes(conf, db)
+	appMux := logging.NewLoggingMiddleware(app.InitializeRoutes(conf, db))
 	mux.Handle("/", appMux)
 	mux.Handle("/public/assets/", public.FixCompressedContentHeaders(http.StripPrefix("/public/assets/", http.FileServerFS(public.AssetFs()))))
 
-	http.ListenAndServe(":8080", logging.NewLoggingMiddleware(mux))
+	http.ListenAndServe(":8080", mux)
 }
