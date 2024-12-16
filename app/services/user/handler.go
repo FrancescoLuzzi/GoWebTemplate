@@ -155,8 +155,7 @@ func (h *Handler) handleLogin(cfg *config.JWTConfig) http.HandlerFunc {
 			return
 		}
 		if !valid {
-			slog.Info("password not valid")
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "password not valid", http.StatusBadRequest)
 			return
 		}
 		authToken, authExp, err := auth.CreateJWT(user.Id, auth.AuthToken, cfg)
@@ -194,7 +193,7 @@ func (h *Handler) handleCurrentUserProfile(w http.ResponseWriter, r *http.Reques
 	}
 	user, err := h.store.GetById(ctx, &userId)
 	if err != nil {
-		slog.Info("failed to get user by id: %v\n", err)
+		slog.Info("failed to get user by id", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
