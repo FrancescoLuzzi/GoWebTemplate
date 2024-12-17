@@ -11,6 +11,8 @@ import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/services/auth"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/gorilla/schema"
 )
 
@@ -88,9 +90,9 @@ func (h *Handler) GetRoutes() *http.ServeMux {
 	mux.HandleFunc("POST /signup", h.handleSignup)
 
 	withJWT := auth.CreateJWTAuthHandler(h.store, &h.cfg.JWTConfig)
+	mux.HandleFunc("GET /refresh", h.handleRefreshJWT)
 	// admin routes
 	mux.HandleFunc("GET /profile", withJWT(h.handleCurrentUserProfile))
-	mux.HandleFunc("GET /refresh", withJWT(h.handleRefreshJWT))
 	return mux
 }
 
@@ -188,8 +190,20 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleRefreshJWT(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userId, err := auth.UserFromCtx(ctx)
+	refreshToken, err := auth.GetRefreshToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	token, err := auth.ValidateJWT(refreshToken, &h.cfg.JWTConfig)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	slog.Info("claims", "uid", claims["userId"])
+
+	userId, err := uuid.Parse(claims["userId"].(string))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -32,13 +32,13 @@ var errMissingToken error = fmt.Errorf("missing auth token")
 func CreateJWTAuthHandler(store types.UserStore, cfg *config.JWTConfig) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			tokenString, err := GetTokenFromRequest(r)
+			tokenString, err := GetAuthToken(r)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
 
-			token, err := validateJWT(tokenString, cfg)
+			token, err := ValidateJWT(tokenString, cfg)
 			if err != nil {
 				slog.Info("failed to validate token")
 				http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -51,7 +51,11 @@ func CreateJWTAuthHandler(store types.UserStore, cfg *config.JWTConfig) func(htt
 			}
 
 			claims := token.Claims.(jwt.MapClaims)
-			userId := claims["userId"].(uuid.UUID)
+			userId, err := uuid.Parse(claims["userId"].(string))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			// Add the user to the context
 			ctx := context.WithValue(r.Context(), app_ctx.UserCtxKey, userId)
 			r = r.WithContext(ctx)
@@ -72,7 +76,7 @@ func CreateJWT(userID uuid.UUID, tokenType TokenType, cfg *config.JWTConfig) (st
 	return tokenString, exp, err
 }
 
-func validateJWT(tokenString string, cfg *config.JWTConfig) (*jwt.Token, error) {
+func ValidateJWT(tokenString string, cfg *config.JWTConfig) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -89,11 +93,20 @@ func UserFromCtx(ctx context.Context) (uuid.UUID, error) {
 	return userId, nil
 }
 
-func GetTokenFromRequest(r *http.Request) (string, error) {
+func GetAuthToken(r *http.Request) (string, error) {
 	token := r.Header.Get(AuthTokenHeader)
 	if token == "" {
 		return "", errMissingToken
 	} else {
 		return token, nil
+	}
+}
+
+func GetRefreshToken(r *http.Request) (string, error) {
+	cookie, err := r.Cookie(AuthTokenCookie)
+	if err != nil {
+		return "", err
+	} else {
+		return cookie.Value, nil
 	}
 }
