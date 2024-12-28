@@ -1,8 +1,9 @@
-package user
+package stores
 
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
@@ -14,25 +15,24 @@ type userStore struct {
 	db *sqlx.DB
 }
 
-func NewUserStore(db *sqlx.DB) types.UserStore {
+func NewUserStore(db *sqlx.DB) *userStore {
 	return &userStore{db: db}
 }
 
 func (u *userStore) Create(ctx context.Context, user *types.User) (*uuid.UUID, error) {
-	uid, err := uuid.NewV7()
-	if err != nil {
-		// better wrap this in an unknown error
-		return nil, err
-	}
-	_, err = u.db.ExecContext(ctx,
-		`INSERT INTO users (id, email, firstName, lastName, password) VALUES ($1, $2, $3, $4, $5)`,
-		uid,
+	var uid uuid.NullUUID
+	err := u.db.QueryRowContext(
+		ctx,
+		`INSERT INTO users (email, firstName, lastName, password) VALUES ($1, $2, $3, $4) RETURNING id`,
 		user.Email,
 		user.FirstName,
 		user.LastName,
 		user.Password,
-	)
-	return &uid, err
+	).Scan(&uid)
+	if !uid.Valid {
+		return nil, errors.New("invalid uuid format")
+	}
+	return &uid.UUID, err
 }
 
 // we expect userCredentils.Password to be already hashed
@@ -42,7 +42,7 @@ func (u *userStore) Update(ctx context.Context, user *types.User) error {
 		// better wrap this in an unknown error
 		return err
 	}
-	defer tx.Rollback()
+	defer tx.Commit()
 	_, err = tx.Exec(`UPDATE users
 	SET email = $1, firstName = $2, lastName = $3 , updatedAt = $4, password = $5
 	WHERE id = $6`,
@@ -54,8 +54,8 @@ func (u *userStore) Update(ctx context.Context, user *types.User) error {
 		user.Id,
 	)
 
-	if err == nil {
-		tx.Commit()
+	if err != nil {
+		tx.Rollback()
 	}
 	return err
 }

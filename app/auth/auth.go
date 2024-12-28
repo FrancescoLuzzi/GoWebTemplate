@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -29,42 +28,7 @@ const (
 
 var errMissingToken error = fmt.Errorf("missing auth token")
 
-func CreateJWTAuthHandler(store types.UserStore, cfg *config.JWTConfig) func(http.HandlerFunc) http.HandlerFunc {
-	return func(next http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			tokenString, err := GetAuthToken(r)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			token, err := ValidateJWT(tokenString, cfg)
-			if err != nil {
-				slog.Info("failed to validate token")
-				http.Error(w, err.Error(), http.StatusUnauthorized)
-				return
-			}
-
-			if !token.Valid {
-				http.Error(w, "invalid token", http.StatusUnauthorized)
-				return
-			}
-
-			claims := token.Claims.(jwt.MapClaims)
-			userId, err := uuid.Parse(claims["userId"].(string))
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			// Add the user to the context
-			ctx := context.WithValue(r.Context(), app_ctx.UserCtxKey, userId)
-			r = r.WithContext(ctx)
-			next.ServeHTTP(w, r)
-		}
-	}
-}
-
-func CreateJWT(userID uuid.UUID, tokenType TokenType, cfg *config.JWTConfig) (string, time.Time, error) {
+func CreateJWT(userID uuid.UUID, tokenType TokenType, cfg *config.JWTConfig) (types.JWTToken, error) {
 	delta := utils.Ternary(tokenType == AuthToken, cfg.TokenExpiration, cfg.RefreshTokenExpiration)
 	exp := time.Now().Add(delta)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -73,7 +37,8 @@ func CreateJWT(userID uuid.UUID, tokenType TokenType, cfg *config.JWTConfig) (st
 	})
 
 	tokenString, err := token.SignedString(cfg.Secret)
-	return tokenString, exp, err
+
+	return types.JWTToken{Token: tokenString, Exp: exp}, err
 }
 
 func ValidateJWT(tokenString string, cfg *config.JWTConfig) (*jwt.Token, error) {

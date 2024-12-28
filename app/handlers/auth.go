@@ -1,4 +1,4 @@
-package user
+package handlers
 
 import (
 	"encoding/json"
@@ -7,8 +7,9 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/auth"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/services/auth"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/interfaces"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
@@ -35,9 +36,6 @@ type (
 		LastName        string `validate:"required,max=50"`
 	}
 )
-
-var validate = validator.New(validator.WithRequiredStructEnabled())
-var decoder = schema.NewDecoder()
 
 func registerPasswordValidation(v *validator.Validate) {
 	v.RegisterValidation("password", func(fl validator.FieldLevel) bool {
@@ -71,32 +69,32 @@ func registerPasswordValidation(v *validator.Validate) {
 	})
 }
 
-type Handler struct {
-	cfg   *config.AppConfig
-	store types.UserStore
+type AuthHandler struct {
+	service  interfaces.AuthService
+	validate *validator.Validate
+	decoder  *schema.Decoder
+	cfg      *config.AppConfig
 }
 
-func NewHandler(store types.UserStore, cfg *config.AppConfig) Handler {
-	return Handler{
-		cfg:   cfg,
-		store: store,
+func NewAuthHandler(service interfaces.AuthService) AuthHandler {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	registerPasswordValidation(validate)
+	return AuthHandler{
+		service:  service,
+		validate: validate,
+		decoder:  schema.NewDecoder(),
 	}
 }
 
-func (h *Handler) GetRoutes() *http.ServeMux {
+func (h *AuthHandler) GetRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
-	registerPasswordValidation(validate)
 	mux.HandleFunc("POST /login", h.handleLogin)
 	mux.HandleFunc("POST /signup", h.handleSignup)
-
-	withJWT := auth.CreateJWTAuthHandler(h.store, &h.cfg.JWTConfig)
 	mux.HandleFunc("GET /refresh", h.handleRefreshJWT)
-	// admin routes
-	mux.HandleFunc("GET /profile", withJWT(h.handleCurrentUserProfile))
 	return mux
 }
 
-func (h *Handler) handleSignup(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) handleSignup(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -104,11 +102,11 @@ func (h *Handler) handleSignup(w http.ResponseWriter, r *http.Request) {
 	}
 	var credentials UserSignup
 
-	if err = decoder.Decode(&credentials, r.PostForm); err != nil {
+	if err = h.decoder.Decode(&credentials, r.PostForm); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err = validate.Struct(&credentials); err != nil {
+	if err = h.validate.Struct(&credentials); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -123,7 +121,7 @@ func (h *Handler) handleSignup(w http.ResponseWriter, r *http.Request) {
 		FirstName: credentials.Email,
 		LastName:  credentials.LastName,
 	}
-	uid, err := h.store.Create(r.Context(), &user)
+	uid, err := h.service.Signup(r.Context(), &user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -134,18 +132,18 @@ func (h *Handler) handleSignup(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	var credentials UserLogin
-	if err = decoder.Decode(&credentials, r.PostForm); err != nil {
+	if err = h.decoder.Decode(&credentials, r.PostForm); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := validate.Struct(&credentials); err != nil {
+	if err := h.validate.Struct(&credentials); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -189,7 +187,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) handleRefreshJWT(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) handleRefreshJWT(w http.ResponseWriter, r *http.Request) {
 	refreshToken, err := auth.GetRefreshToken(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -218,21 +216,4 @@ func (h *Handler) handleRefreshJWT(w http.ResponseWriter, r *http.Request) {
 		"token": authToken,
 		"exp":   authExp,
 	})
-}
-
-func (h *Handler) handleCurrentUserProfile(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userId, err := auth.UserFromCtx(ctx)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	user, err := h.store.GetById(ctx, &userId)
-	if err != nil {
-		slog.Info("failed to get user by id", "err", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
 }

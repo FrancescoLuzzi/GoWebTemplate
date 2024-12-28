@@ -10,7 +10,7 @@ import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/db"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/middleware/logging"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/middlewares"
 	"github.com/FrancescoLuzzi/AQuickQuestion/public"
 	"github.com/joho/godotenv"
 )
@@ -37,7 +37,7 @@ func main() {
 		log.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	appMux := logging.NewLoggingMiddleware(app.InitializeRoutes(conf, db))
+	appMux := middlewares.LoggingMiddleware(app.InitializeRoutes(conf, db))
 	mux.Handle("/", appMux)
 	mux.Handle("/public/assets/", public.FixCompressedContentHeaders(http.StripPrefix("/public/assets/", http.FileServerFS(public.AssetFs()))))
 
