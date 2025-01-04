@@ -21,7 +21,18 @@ type UserStore interface {
 type UserService interface {
 	UserStore
 }
+
 type AuthService interface {
 	Signup(context.Context, *types.User) (*uuid.UUID, error)
 	Login(context.Context, *types.User) (*types.LoginResponse, error)
+	RefreshToken(context.Context, string) (types.JWTToken, error)
+}
+
+type Decoder interface {
+	Decode(any, map[string]string) error
+}
+
+type Validator interface {
+	Struct(any) error
+	StructCtx(context.Context, any) error
 }

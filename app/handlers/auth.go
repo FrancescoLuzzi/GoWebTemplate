@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"unicode"
 	"unicode/utf8"
@@ -12,30 +11,37 @@ import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/interfaces"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"github.com/gorilla/schema"
 )
 
-type (
-	UserLogin struct {
-		Email    string `validate:"required,email"`
-		Password string `validate:"required"`
+type UserLogin struct {
+	Email    string `json:"email" schema:"email" validate:"required,email"`
+	Password string `json:"password" schema:"password" validate:"required"`
+}
+
+func (u UserLogin) ToUser() *types.User {
+	return &types.User{
+		Email:    u.Email,
+		Password: u.Password,
 	}
-	UserSignup struct {
-		Email     string `validate:"required,email"`
-		Password  string `validate:"required,password"`
-		FirstName string `validate:"required,max=50"`
-		LastName  string `validate:"required,max=50"`
+}
+
+type UserInfos struct {
+	Email     string `json:"email" schema:"email" validate:"required,email"`
+	Password  string `json:"password" schema:"password" validate:"required,password"`
+	FirstName string `json:"first_name" schema:"first_name" validate:"required,max=50"`
+	LastName  string `json:"last_name" schema:"last_name" validate:"required,max=50"`
+}
+
+func (u UserInfos) ToUser() *types.User {
+	return &types.User{
+		Password:  u.Password,
+		Email:     u.Email,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
 	}
-	UserUpdate struct {
-		Email           string `validate:"required,email"`
-		Password        string `validate:"required,password"`
-		PasswordConfirm string
-		FirstName       string `validate:"required,max=50"`
-		LastName        string `validate:"required,max=50"`
-	}
-)
+
+}
 
 func registerPasswordValidation(v *validator.Validate) {
 	v.RegisterValidation("password", func(fl validator.FieldLevel) bool {
@@ -100,28 +106,17 @@ func (h *AuthHandler) handleSignup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var credentials UserSignup
+	var credentials UserInfos
 
 	if err = h.decoder.Decode(&credentials, r.PostForm); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err = h.validate.Struct(&credentials); err != nil {
+	if err = h.validate.StructCtx(r.Context(), &credentials); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	passwordHash, err := auth.HashPassword(credentials.Password, &auth.DefaultConf)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	user := types.User{
-		Password:  passwordHash,
-		Email:     credentials.Email,
-		FirstName: credentials.Email,
-		LastName:  credentials.LastName,
-	}
-	uid, err := h.service.Signup(r.Context(), &user)
+	uid, err := h.service.Signup(r.Context(), credentials.ToUser())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -147,43 +142,19 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	user, err := h.store.GetByEmail(r.Context(), &credentials.Email)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	valid, err := auth.ValidatePassword(credentials.Password, user.Password)
-	if err != nil {
-		slog.Info("couldn't validate password", "err", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if !valid {
-		http.Error(w, "password not valid", http.StatusBadRequest)
-		return
-	}
-	authToken, authExp, err := auth.CreateJWT(user.Id, auth.AuthToken, &h.cfg.JWTConfig)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	refreshToken, refreshExp, err := auth.CreateJWT(user.Id, auth.RefreshToken, &h.cfg.JWTConfig)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	res, err := h.service.Login(r.Context(), credentials.ToUser())
 	http.SetCookie(w, &http.Cookie{
 		Name:     auth.AuthTokenCookie,
-		Value:    refreshToken,
-		Expires:  refreshExp,
+		Value:    res.RefreshToken.Token,
+		Expires:  res.RefreshToken.Exp,
 		SameSite: http.SameSiteLaxMode,
 		HttpOnly: true,
 		Secure:   true,
 	})
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"token": authToken,
-		"exp":   authExp,
+		"token": res.AuthToken.Token,
+		"exp":   res.AuthToken.Exp,
 	})
 }
 
@@ -193,27 +164,14 @@ func (h *AuthHandler) handleRefreshJWT(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	token, err := auth.ValidateJWT(refreshToken, &h.cfg.JWTConfig)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	claims := token.Claims.(jwt.MapClaims)
-	slog.Info("claims", "uid", claims["userId"])
-
-	userId, err := uuid.Parse(claims["userId"].(string))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	authToken, authExp, err := auth.CreateJWT(userId, auth.AuthToken, &h.cfg.JWTConfig)
+	authToken, err := h.service.RefreshToken(r.Context(), refreshToken)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"token": authToken,
-		"exp":   authExp,
+		"token": authToken.Token,
+		"exp":   authToken.Exp,
 	})
 }

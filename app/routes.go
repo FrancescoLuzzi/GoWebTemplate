@@ -29,7 +29,7 @@ func InitializeRoutes(conf config.AppConfig, db *sqlx.DB) *http.ServeMux {
 
 	authMiddleware := middlewares.NewAuthMiddleware(userStore, &conf.JWTConfig)
 
-	mux.Handle("/", userHandler.GetRoutes(authMiddleware))
-	mux.Handle("/", authHandler.GetRoutes())
+	mux.Handle("/auth/", http.StripPrefix("/auth", authHandler.GetRoutes()))
+	mux.Handle("/user/", http.StripPrefix("/user", userHandler.GetRoutes(authMiddleware)))
 	return mux
 }

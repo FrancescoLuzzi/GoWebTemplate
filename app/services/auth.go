@@ -18,22 +18,27 @@ type AuthService struct {
 	store interfaces.UserStore
 }
 
-func NewAuthService(store interfaces.UserStore, cfg *config.AppConfig) AuthService {
-	return AuthService{
+func NewAuthService(store interfaces.UserStore, cfg *config.AppConfig) *AuthService {
+	return &AuthService{
 		cfg:   cfg,
 		store: store,
 	}
 }
 
-func (a *AuthService) Signup(ctx context.Context, user types.User) (*uuid.UUID, error) {
-	uid, err := a.store.Create(ctx, &user)
+func (a *AuthService) Signup(ctx context.Context, user *types.User) (*uuid.UUID, error) {
+	passwordHash, err := auth.HashPassword(user.Password, &auth.DefaultConf)
+	if err != nil {
+		return nil, err
+	}
+	user.Password = passwordHash
+	uid, err := a.store.Create(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 	return uid, nil
 }
 
-func (a *AuthService) Login(ctx context.Context, credentials types.User) (*types.LoginResponse, error) {
+func (a *AuthService) Login(ctx context.Context, credentials *types.User) (*types.LoginResponse, error) {
 	user, err := a.store.GetByEmail(ctx, &credentials.Email)
 	if err != nil {
 		return nil, err
