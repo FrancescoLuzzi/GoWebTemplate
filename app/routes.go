@@ -15,9 +15,13 @@ import (
 
 func InitializeRoutes(conf config.AppConfig, db *sqlx.DB) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.Handle("GET /home", middlewares.HxRequestMiddleware(utils.RenderComponentHandler(landing.Index())))
-	mux.Handle("GET /signup", middlewares.HxRequestMiddleware(utils.RenderComponentHandler(landing.Signup())))
-	mux.Handle("GET /login", middlewares.HxRequestMiddleware(utils.RenderComponentHandler(landing.Login())))
+	md := middlewares.Combine(
+		middlewares.HxRequestMiddleware,
+	)
+	mux.Handle("GET /", md(utils.RenderComponentHandler(landing.Index())))
+	mux.Handle("GET /home", md(utils.RenderComponentHandler(landing.Index())))
+	mux.Handle("GET /signup", md(utils.RenderComponentHandler(landing.Signup())))
+	mux.Handle("GET /login", md(utils.RenderComponentHandler(landing.Login())))
 
 	userStore := stores.NewUserStore(db)
 
@@ -29,7 +33,7 @@ func InitializeRoutes(conf config.AppConfig, db *sqlx.DB) *http.ServeMux {
 
 	authMiddleware := middlewares.NewAuthMiddleware(userStore, &conf.JWTConfig)
 
-	mux.Handle("/auth/", http.StripPrefix("/auth", authHandler.GetRoutes()))
-	mux.Handle("/user/", http.StripPrefix("/user", userHandler.GetRoutes(authMiddleware)))
+	authHandler.RegisterRoutes(mux)
+	userHandler.RegisterRoutes(mux, authMiddleware)
 	return mux
 }

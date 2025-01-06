@@ -92,12 +92,10 @@ func NewAuthHandler(service interfaces.AuthService) AuthHandler {
 	}
 }
 
-func (h *AuthHandler) GetRoutes() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /login", h.handleLogin)
-	mux.HandleFunc("POST /signup", h.handleSignup)
-	mux.HandleFunc("GET /refresh", h.handleRefreshJWT)
-	return mux
+func (h *AuthHandler) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("POST /auth/login", h.handleLogin)
+	mux.HandleFunc("POST /auth/signup", h.handleSignup)
+	mux.HandleFunc("GET /auth/refresh", h.handleRefreshJWT)
 }
 
 func (h *AuthHandler) handleSignup(w http.ResponseWriter, r *http.Request) {

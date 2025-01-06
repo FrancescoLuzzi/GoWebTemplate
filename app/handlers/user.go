@@ -28,11 +28,9 @@ func NewUserHandler(service interfaces.UserService) UserHandler {
 	}
 }
 
-func (h *UserHandler) GetRoutes(authMiddleware middlewares.Middleware) *http.ServeMux {
-	mux := http.NewServeMux()
+func (h *UserHandler) RegisterRoutes(mux *http.ServeMux, authMiddleware middlewares.Middleware) {
 	// admin routes
-	mux.Handle("GET /profile", authMiddleware(http.HandlerFunc(h.handleCurrentUserProfile)))
-	return mux
+	mux.Handle("GET /user/profile", authMiddleware(http.HandlerFunc(h.handleCurrentUserProfile)))
 }
 
 func (h *UserHandler) handleCurrentUserProfile(w http.ResponseWriter, r *http.Request) {
