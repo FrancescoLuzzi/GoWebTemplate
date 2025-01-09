@@ -1,30 +1,27 @@
 import { defineConfig } from 'vite';
-import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
-import viteCompression from 'vite-plugin-compression';
 
-// if in ESM context
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  root: 'frontend_lib',
+  root: '.',
   build: {
     lib: {
-      entry: resolve(__dirname, 'frontend_lib/main.ts'),
-      name: 'fe',
-      fileName: 'index',
+      entry: resolve(__dirname, './src/index.ts'),
+      name: 'alpine',
+      fileName: 'alpine',
       formats: ['es'],
     },
-    outDir: '../public/assets',
+    outDir: 'public/assets',
+    copyPublicDir: false,
     emptyOutDir: false,
   },
-  plugins: [viteCompression({ deleteOriginFile: true })],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './frontend_lib'),
+      '@': resolve(__dirname, './src'),
     },
   },
 });

@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:tailwind && npm run build:vite",
-    "build:vite": "vite build",
+    "build:vite": "vite --config packages/alpine/vite.config.ts build",
     "build:tailwind": "npx tailwindcss -i ./index.css -o ./public/assets/styles.css --minify",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 && tsc"
+    "lint": "eslint packages --ext ts,tsx --report-unused-disable-directives --max-warnings 0 && tsc"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
@@ -26,8 +26,7 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.19.0",
     "url": "^0.11.1",
-    "vite": "^6.0.2",
-    "vite-plugin-compression": "^0.5.1"
+    "vite": "^6.0.2"
   },
   "dependencies": {
     "alpinejs": "^3.14.5"
