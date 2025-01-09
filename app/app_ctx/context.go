@@ -3,7 +3,7 @@ package app_ctx
 import (
 	"context"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
+	"github.com/google/uuid"
 )
 
 type contextKey string
@@ -18,8 +18,8 @@ func ShowLayout(ctx context.Context) bool {
 	return true
 }
 
-func LoggedUser(ctx context.Context) *types.User {
-	if user, ok := ctx.Value(UserCtxKey).(types.User); ok {
+func LoggedUser(ctx context.Context) *uuid.UUID {
+	if user, ok := ctx.Value(UserCtxKey).(uuid.UUID); ok {
 		return &user
 	}
 	return nil

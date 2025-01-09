@@ -3,6 +3,7 @@ package landing
 import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/icons"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/layouts"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/components"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/ui"
 )
 
@@ -13,10 +14,7 @@ templ Login() {
 				@icons.Postcard(ui.Class("size-4"))
 				<input type="text" name="email" class="grow" placeholder="Email"/>
 			</label>
-			<label class="input input-bordered flex items-center gap-2">
-				@icons.PassKey(ui.Class("size-4"))
-				<input type="password" name="password" class="grow" placeholder="password"/>
-			</label>
+			@components.InputPassword(components.NewPasswordProps("password", "password"))
 			<button type="submit">Login</button>
 		</form>
 	}

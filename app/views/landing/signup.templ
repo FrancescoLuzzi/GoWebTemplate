@@ -3,6 +3,7 @@ package landing
 import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/icons"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/layouts"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/components"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/ui"
 )
 
@@ -13,31 +14,8 @@ templ Signup() {
 				@icons.Postcard(ui.Class("size-4"))
 				<input type="text" name="email" class="grow" placeholder="Email"/>
 			</label>
-			<label class="input input-bordered flex items-center gap-2">
-				@icons.PassKey(ui.Class("size-4"))
-				<div class="relative grow" x-data="password">
-					<input name="password" id="password" type="password" autocomplete="off" class="w-full" placeholder="password" :type="show ? 'password' : 'text'"/>
-					<label class="swap absolute top-1/2 right-2 cursor-pointer -translate-y-1/2">
-						<input type="checkbox" @click="toggle"/>
-						@icons.EyeOpen(ui.Class("swap-on size-4"))
-						@icons.EyeClosed(ui.Class("swap-off size-4"))
-					</label>
-				</div>
-			</label>
-			<label class="input input-bordered flex items-center gap-2">
-				@icons.PassKey(ui.Class("size-4"))
-				<input
-					type="password"
-					class="grow"
-					placeholder="confirm password"
-					onkeyup="this.setCustomValidity('')"
-					hx-on:htmx:validation:validate="
-					if(this.value !== htmx.find('#password').value) {
-						this.setCustomValidity('Password is not the same')
-						htmx.find('#signup-form').reportValidity()
-                    }"
-				/>
-			</label>
+			@components.InputPassword(components.NewPasswordProps("password", "password"))
+			@components.InputConfirmPassword(components.NewConfirmPasswordProps("#password", "#signup-form", "confirm password"))
 			<label class="input input-bordered flex items-center gap-2">
 				<input type="text" name="first_name" class="grow" placeholder="FirstName"/>
 			</label>

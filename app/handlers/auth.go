@@ -9,6 +9,7 @@ import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/auth"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/interfaces"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/middlewares"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/schema"
@@ -92,10 +93,11 @@ func NewAuthHandler(service interfaces.AuthService) AuthHandler {
 	}
 }
 
-func (h *AuthHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("POST /auth/login", h.handleLogin)
-	mux.HandleFunc("POST /auth/signup", h.handleSignup)
-	mux.HandleFunc("GET /auth/refresh", h.handleRefreshJWT)
+func (h *AuthHandler) RegisterRoutes(mux *http.ServeMux, md middlewares.Middleware) {
+	mux.Handle("POST /auth/login", md(http.HandlerFunc(h.handleLogin)))
+	mux.Handle("POST /auth/logout", md(http.HandlerFunc(h.handleLogout)))
+	mux.Handle("POST /auth/signup", md(http.HandlerFunc(h.handleSignup)))
+	mux.Handle("GET /auth/refresh", md(http.HandlerFunc(h.handleRefreshJWT)))
 }
 
 func (h *AuthHandler) handleSignup(w http.ResponseWriter, r *http.Request) {
@@ -146,6 +148,7 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		Value:    res.RefreshToken.Token,
 		Expires:  res.RefreshToken.Exp,
 		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 	})
@@ -154,6 +157,18 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		"token": res.AuthToken.Token,
 		"exp":   res.AuthToken.Exp,
 	})
+}
+
+func (h *AuthHandler) handleLogout(w http.ResponseWriter, r *http.Request) {
+	_, err := auth.GetRefreshToken(r)
+	if err != nil {
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:   auth.AuthTokenCookie,
+		MaxAge: -1,
+	})
+	w.Header().Add("HX-Redirect", "/")
 }
 
 func (h *AuthHandler) handleRefreshJWT(w http.ResponseWriter, r *http.Request) {

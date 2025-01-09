@@ -22,7 +22,7 @@ func NewAuthMiddleware(store interfaces.UserStore, cfg *config.JWTConfig) Middle
 				tokenString, err = auth.GetRefreshToken(r)
 			}
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				next.ServeHTTP(w, r)
 				return
 			}
 
@@ -50,4 +50,15 @@ func NewAuthMiddleware(store interfaces.UserStore, cfg *config.JWTConfig) Middle
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func MustAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := auth.UserFromCtx(r.Context())
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

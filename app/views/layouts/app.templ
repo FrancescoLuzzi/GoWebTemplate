@@ -8,7 +8,7 @@ import (
 templ App() {
 	if app_ctx.ShowLayout(ctx) {
 		@BaseLayout() {
-			@components.Navbar(false)
+			@components.Navbar()
 			{ children... }
 		}
 	} else {
