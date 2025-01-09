@@ -143,6 +143,10 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err := h.service.Login(r.Context(), credentials.ToUser())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     auth.AuthTokenCookie,
 		Value:    res.RefreshToken.Token,
