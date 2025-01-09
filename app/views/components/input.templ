@@ -1,0 +1,101 @@
+package components
+
+import (
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/icons"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/ui"
+)
+
+var oncePasswordValidate = templ.NewOnceHandle()
+
+type ConfirmPasswordProps struct {
+	PasswordQuery string
+	FormQuery     string
+	Placeholder   string
+	Name          string
+}
+
+func NewConfirmPasswordProps(passQuery, formQuery, placeholder string) *ConfirmPasswordProps {
+	return &ConfirmPasswordProps{
+		PasswordQuery: passQuery,
+		FormQuery:     formQuery,
+		Placeholder:   placeholder,
+	}
+}
+
+func (c *ConfirmPasswordProps) WithName(name string) *ConfirmPasswordProps {
+	c.Name = name
+	return c
+}
+
+type PasswordProps struct {
+	Name        string
+	Id          string
+	Placeholder string
+}
+
+func NewPasswordProps(id, placeholder string) *PasswordProps {
+	return &PasswordProps{Name: id, Id: id, Placeholder: placeholder}
+}
+
+func (i *PasswordProps) WithName(name string) *PasswordProps {
+	i.Name = name
+	return i
+}
+
+templ InputPassword(input *PasswordProps, opts ...ui.AttrModifier) {
+	<label { ui.CreateAttrs("input input-bordered flex items-center gap-2", opts...)... }>
+		@icons.PassKey(ui.Class("size-4"))
+		<div class="relative grow" x-data="password">
+			<input
+				name={ input.Name }
+				id={ input.Id }
+				placeholder={ input.Placeholder }
+				type="password"
+				autocomplete="off"
+				class="w-full"
+				:type="show ? 'text' : 'password'"
+			/>
+			<label class="swap absolute top-1/2 right-2 cursor-pointer -translate-y-1/2">
+				<input type="checkbox" @click="toggle"/>
+				@icons.EyeOpen(ui.Class("swap-on size-4"))
+				@icons.EyeClosed(ui.Class("swap-off size-4"))
+			</label>
+		</div>
+	</label>
+}
+
+templ InputConfirmPassword(input *ConfirmPasswordProps, opts ...ui.AttrModifier) {
+	@oncePasswordValidate.Once() {
+		<script>
+			function validate(el) {
+				const passwordQuery = el.getAttribute("arg-password")
+				const formQuery = el.getAttribute("arg-form")
+				if (el.value !== htmx.find(passwordQuery).value) {
+					el.setCustomValidity('Password is not the same')
+					htmx.find(formQuery).reportValidity()
+				}
+			}
+
+		</script>
+	}
+	<label { ui.CreateAttrs("input input-bordered flex items-center gap-2", opts...)... }>
+		@icons.PassKey(ui.Class("size-4"))
+		<div class="relative grow" x-data="password">
+			<input
+				type="password"
+				{ ui.CreateAttrs("grow",ui.OptAttr("name",input.Name))... }
+				placeholder={ input.Placeholder }
+				onkeyup="this.setCustomValidity('')"
+				arg-password={ input.PasswordQuery }
+				arg-form={ input.FormQuery }
+				hx-on:htmx:validation:validate="validate(this)"
+				:type="show ? 'text' : 'password'"
+			/>
+			<label class="swap absolute top-1/2 right-2 cursor-pointer -translate-y-1/2">
+				<input type="checkbox" @click="toggle"/>
+				@icons.EyeOpen(ui.Class("swap-on size-4"))
+				@icons.EyeClosed(ui.Class("swap-off size-4"))
+			</label>
+		</div>
+	</label>
+}

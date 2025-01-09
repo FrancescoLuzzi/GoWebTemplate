@@ -22,10 +22,28 @@ func Merge(a, b string) string {
 	return fmt.Sprintf("%s %s", a, b)
 }
 
-func Class(class string) AttrModifier {
+func Attr(name, value string) AttrModifier {
 	return func(attrs *templ.Attributes) {
 		attr := *attrs
-		class := attr["class"].(string) + " " + class
-		attr["class"] = class
+		value := attr[name].(string) + " " + value
+		attr[name] = value
 	}
+}
+
+func OptAttr(name, value string) AttrModifier {
+	return func(attrs *templ.Attributes) {
+		if value == "" {
+			return
+		}
+		attr := *attrs
+		value := attr[name].(string) + " " + value
+		attr[name] = value
+	}
+}
+
+func Class(class string) AttrModifier {
+	return Attr("class", class)
+}
+func Name(name string) AttrModifier {
+	return Attr("name", name)
 }
