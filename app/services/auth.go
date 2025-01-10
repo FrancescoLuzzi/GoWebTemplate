@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/auth"
@@ -43,15 +42,11 @@ func (a *AuthService) Login(ctx context.Context, credentials *types.User) (*type
 	if err != nil {
 		return nil, err
 	}
-	valid, err := auth.ValidatePassword(credentials.Password, user.Password)
+	err = auth.ValidatePassword(credentials.Password, user.Password)
 	if err != nil {
 		// bad request
 		slog.Info("couldn't validate password", "err", err)
 		return nil, err
-	}
-	if !valid {
-		// bad request
-		return nil, fmt.Errorf("password not valid")
 	}
 	authToken, err := auth.CreateJWT(user.Id, auth.AuthToken, &a.cfg.JWTConfig)
 	if err != nil {

@@ -10,8 +10,10 @@ import (
 type UserStore interface {
 	// create new user
 	Create(context.Context, *types.User) (*uuid.UUID, error)
-	// update user values (not the Id) and updatedAt date
+	// update user values (not Id or Password) and updatedAt date
 	Update(context.Context, *types.User) error
+	// update user values (not the Id) and updatedAt date
+	UpdatePassword(context.Context, *types.User, *string) error
 	// get user by email
 	GetByEmail(context.Context, *string) (types.User, error)
 	// get user by id
@@ -19,7 +21,11 @@ type UserStore interface {
 }
 
 type UserService interface {
-	UserStore
+	Create(context.Context, *types.User) (*uuid.UUID, error)
+	Update(context.Context, *types.User) error
+	UpdatePassword(context.Context, *types.User, *string, *string) error
+	GetByEmail(context.Context, *string) (types.User, error)
+	GetById(context.Context, *uuid.UUID) (types.User, error)
 }
 
 type AuthService interface {

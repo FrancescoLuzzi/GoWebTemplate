@@ -27,14 +27,14 @@ func (u UserLogin) ToUser() *types.User {
 	}
 }
 
-type UserInfos struct {
+type UserSignup struct {
 	Email     string `json:"email" schema:"email" validate:"required,email"`
 	Password  string `json:"password" schema:"password" validate:"required,password"`
 	FirstName string `json:"first_name" schema:"first_name" validate:"required,max=50"`
 	LastName  string `json:"last_name" schema:"last_name" validate:"required,max=50"`
 }
 
-func (u UserInfos) ToUser() *types.User {
+func (u UserSignup) ToUser() *types.User {
 	return &types.User{
 		Password:  u.Password,
 		Email:     u.Email,
@@ -106,7 +106,7 @@ func (h *AuthHandler) handleSignup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var credentials UserInfos
+	var credentials UserSignup
 
 	if err = h.decoder.Decode(&credentials, r.PostForm); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -144,7 +144,7 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	res, err := h.service.Login(r.Context(), credentials.ToUser())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	http.SetCookie(w, &http.Cookie{

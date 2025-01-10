@@ -18,6 +18,7 @@ const (
 var (
 	ErrInvalidHashFormat   error = fmt.Errorf("hash doesn't follow PHC format")
 	ErrIncompatibleVersion error = fmt.Errorf("incompatible algorithm version")
+	ErrInvalidPassword     error = fmt.Errorf("invalid password")
 )
 
 type ArgonConfig struct {
@@ -63,12 +64,12 @@ func HashPassword(password string, c *ArgonConfig) (encodedHash string, err erro
 	return c.formatPHC(hash, salt), nil
 }
 
-func ValidatePassword(password, encodedHash string) (match bool, err error) {
+func ValidatePassword(password, encodedHash string) error {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
 	c, salt, hash, err := getParametersFromHash(encodedHash)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// Derive the key from the other password using the same parameters.
@@ -78,9 +79,9 @@ func ValidatePassword(password, encodedHash string) (match bool, err error) {
 	// that we are using the subtle.ConstantTimeCompare() function for this
 	// to help prevent timing attacks.
 	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
-		return true, nil
+		return nil
 	}
-	return false, nil
+	return ErrInvalidPassword
 }
 
 func getParametersFromHash(encodedHash string) (c *ArgonConfig, salt, hash []byte, err error) {
