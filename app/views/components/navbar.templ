@@ -18,15 +18,14 @@ templ Navbar() {
 					tabindex="0"
 					class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 				>
-					<li><a>Item 1</a></li>
-					<li><a>Item 3</a></li>
+					<li><a hx-get="/home" hx-target="#viewport">Home</a></li>
 				</ul>
 			</div>
-			<a class="btn btn-ghost text-xl">daisyUI</a>
+			<a class="btn btn-ghost text-xl" hx-get="/" hx-target="#viewport">Template</a>
 		</div>
 		<div class="navbar-center hidden lg:flex">
 			<ul class="menu menu-horizontal px-1">
-				<li><a>Item 1</a></li>
+				<li><a hx-get="/home" hx-target="#viewport">Home</a></li>
 				<li>
 					<details>
 						<summary>Parent</summary>
@@ -36,11 +35,9 @@ templ Navbar() {
 						</ul>
 					</details>
 				</li>
-				<li><a>Item 3</a></li>
 			</ul>
 		</div>
 		<div class="navbar-end">
-			@ThemeToggle()
 			if user !=nil {
 				<div class="dropdown dropdown-end">
 					<div tabindex="0" role="button" class="btn btn-ghost">
@@ -50,26 +47,29 @@ templ Navbar() {
 						tabindex="0"
 						class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 					>
-						<li><a href="/profile">Profile</a></li>
+						<li><a hx-get="/profile" hx-target="#viewport">Profile</a></li>
 						<li><a hx-post="/auth/logout">Logout</a></li>
 					</ul>
 				</div>
 			} else {
 				<a
 					id="sign-in"
-					href="/login"
-					class="text-gray-500 dark:text-gray-400 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2"
+					hx-get="/login"
+					hx-target="#viewport"
+					class="cursor-pointer text-gray-500 dark:text-gray-400 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2"
 				>
 					Sign in
 				</a>
 				<a
 					id="sign-in"
-					href="/signup"
-					class="text-gray-500 dark:text-gray-400 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2"
+					hx-get="/signup"
+					hx-target="#viewport"
+					class="cursor-pointer text-gray-500 dark:text-gray-400 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2"
 				>
 					Sign up
 				</a>
 			}
+			@ThemeToggle()
 		</div>
 	</div>
 }

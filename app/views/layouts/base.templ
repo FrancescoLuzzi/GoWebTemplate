@@ -16,10 +16,10 @@ templ BaseLayout() {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<link rel="stylesheet" href={ public.Asset("styles.css") }/>
 			<script src={ public.Asset("alpine.js") } defer></script>
-			<!-- HTMX -->
+			<!-- HTMX, this could also be embedded in the assets -->
 			<script src="https://unpkg.com/htmx.org@2.0.3" defer></script>
 		</head>
-		<body lang="en">
+		<body lang="en" class="size-full">
 			{ children... }
 		</body>
 	</html>
