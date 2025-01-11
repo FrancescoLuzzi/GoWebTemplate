@@ -168,9 +168,14 @@ func (h *AuthHandler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+
 	http.SetCookie(w, &http.Cookie{
-		Name:   auth.AuthTokenCookie,
-		MaxAge: -1,
+		Name:     auth.AuthTokenCookie,
+		MaxAge:   -1,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
 	})
 	w.Header().Add("HX-Redirect", "/")
 }
