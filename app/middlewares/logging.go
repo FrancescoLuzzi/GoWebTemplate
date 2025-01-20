@@ -1,4 +1,4 @@
-package logging
+package middlewares
 
 import (
 	"log/slog"
@@ -31,11 +31,11 @@ func (w *loggingResponseWriter) WriteHeader(statusCode int) {
 	w.w.WriteHeader(statusCode)
 }
 
-func NewLoggingMiddleware(handler http.Handler) http.Handler {
+func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w2 := newLoggingResponseWriter(w)
 		start := time.Now()
-		handler.ServeHTTP(w2, r)
+		next.ServeHTTP(w2, r)
 		slog.Info("incoming request", "mehod", r.Method, "url", r.URL.Path, "status", w2.Code, "duration", time.Since(start).String())
 	})
 }

@@ -13,16 +13,22 @@
     --scheme: dark;
     --shadow: 240 3.7% 20%;
   }
-}
 
-@layer base {
   * {
     color-scheme: var(--scheme);
   }
+
   body {
     @apply bg-base-100 text-base-content;
+  }
+
+  ::-ms-reveal {
+    display: none;
   }
 }
 
 @layer utilities {
+}
+
+@layer components {
 }

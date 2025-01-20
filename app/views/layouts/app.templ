@@ -8,8 +8,10 @@ import (
 templ App() {
 	if app_ctx.ShowLayout(ctx) {
 		@BaseLayout() {
-			@components.Navbar(false)
-			{ children... }
+			@components.Navbar()
+			<div id="viewport" class="size-full">
+				{ children... }
+			</div>
 		}
 	} else {
 		{ children... }

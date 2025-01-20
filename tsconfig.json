@@ -2,10 +2,13 @@
   "compilerOptions": {
     "target": "ESNext",
     "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
-
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -13,20 +16,26 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-
     /* Path */
-    "rootDir": "frontend_lib",
+    "rootDir": "packages",
     "baseUrl": "./",
     "paths": {
-      "@/*": ["./frontend_lib/*"],
+      "@/*": [
+        "./packages/*"
+      ]
     }
   },
-  "include": ["frontend_lib"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": [
+    "packages"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }

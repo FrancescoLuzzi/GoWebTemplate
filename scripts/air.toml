@@ -3,7 +3,7 @@ tmp_dir = "tmp_air"
 
 [build]
   bin = "./tmp_air/main.exe"
-  cmd = "just.exe build-air"
+  cmd = "just build-air"
   delay = 1000
   exclude_dir = ["public", "schema", "tmp_air", "vendor", "node_modules"]
   exclude_file = []

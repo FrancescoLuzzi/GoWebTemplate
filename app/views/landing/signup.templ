@@ -3,26 +3,31 @@ package landing
 import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/icons"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/layouts"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/components"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/ui"
 )
 
 templ Signup() {
 	@layouts.App() {
-		<form hx-post="/signup">
-			<label class="input input-bordered flex items-center gap-2">
-				@icons.Postcard()
-				<input type="text" name="email" class="grow" placeholder="Email"/>
-			</label>
-			<label class="input input-bordered flex items-center gap-2">
-				@icons.PassKey()
-				<input type="password" name="password" class="grow" placeholder="password"/>
-			</label>
-			<label class="input input-bordered flex items-center gap-2">
-				<input type="text" name="firstName" class="grow" placeholder="FirstName"/>
-			</label>
-			<label class="input input-bordered flex items-center gap-2">
-				<input type="text" name="lastName" class="grow" placeholder="LastName"/>
-			</label>
-			<button type="submit">Signup</button>
-		</form>
+		<div class="size-full flex justify-center">
+			<form id="signup-form" hx-post="/auth/signup" class="space-y-2 w-80 md:w-1/4 md:min-w-80">
+				<label class="input input-bordered flex items-center gap-2">
+					<input type="text" name="first_name" class="grow" placeholder="FirstName"/>
+				</label>
+				<label class="input input-bordered flex items-center gap-2">
+					<input type="text" name="last_name" class="grow" placeholder="LastName"/>
+				</label>
+				<label class="input input-bordered flex items-center gap-2">
+					@icons.Postcard(ui.Class("size-4"))
+					<input type="text" name="email" class="grow" placeholder="Email"/>
+				</label>
+				@components.InputPassword(components.NewPasswordProps("password", "password"))
+				@components.InputConfirmPassword(components.NewConfirmPasswordProps("#password", "#signup-form", "confirm password"))
+				<div class="horizontal">
+					<button class="btn" type="submit">Signup</button>
+					<a class="link" hx-get="/login" hx-target="#viewport">I have an account</a>
+				</div>
+			</form>
+		</div>
 	}
 }

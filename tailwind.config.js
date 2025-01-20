@@ -1,5 +1,9 @@
+import daisyui from 'daisyui';
+import typography from '@tailwindcss/typography';
+import twAnimate from 'tailwindcss-animate';
+
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   // https://github.com/saadeghi/daisyui/discussions/640#discussioncomment-6600595
   darkMode: ['class', '[data-theme="dark"]'],
   content: ['./app/views/**/*.{templ,html,go}'],
@@ -43,9 +47,5 @@ module.exports = {
   daisyui: {
     themes: ['light', 'dark'],
   },
-  plugins: [
-    require('tailwindcss-animate'),
-    require('@tailwindcss/typography'),
-    require('daisyui'),
-  ],
+  plugins: [typography, twAnimate, daisyui],
 };

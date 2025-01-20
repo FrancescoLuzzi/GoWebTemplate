@@ -3,7 +3,7 @@ package layouts
 import "github.com/FrancescoLuzzi/AQuickQuestion/public"
 
 var (
-	title = "superkit project"
+	title = "templ-htmx template"
 )
 
 templ BaseLayout() {
@@ -14,14 +14,12 @@ templ BaseLayout() {
 			<link rel="icon" type="image/x-icon" href={ public.Asset("favicon.ico") }/>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<link rel="stylesheet" href={ public.Asset("styles.css.gz") }/>
-			<script src={ public.Asset("index.js.gz") } defer></script>
-			<!-- ALPINE -->
-			// <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-			<!-- HTMX -->
+			<link rel="stylesheet" href={ public.Asset("styles.css") }/>
+			<script src={ public.Asset("alpine.js") } defer></script>
+			<!-- HTMX, this could also be embedded in the assets -->
 			<script src="https://unpkg.com/htmx.org@2.0.3" defer></script>
 		</head>
-		<body lang="en">
+		<body lang="en" class="size-full">
 			{ children... }
 		</body>
 	</html>
