@@ -9,36 +9,25 @@ import (
 
 type UserStore interface {
 	// create new user
-	Create(context.Context, *types.User) (*uuid.UUID, error)
+	Create(ctx context.Context, user *types.User, passwordHash string) (*uuid.UUID, error)
 	// update user values (not Id or Password) and updatedAt date
-	Update(context.Context, *types.User) error
+	Update(ctx context.Context, user *types.User) error
 	// update user values (not the Id) and updatedAt date
-	UpdatePassword(context.Context, *types.User, *string) error
-	// get user by email
-	GetByEmail(context.Context, *string) (types.User, error)
+	UpdatePassword(ctx context.Context, user *types.User, passwordHash string) error
+	// get user password by id
+	GetUserAndPasswordByEmail(ctx context.Context, email string) (types.User, string, error)
 	// get user by id
-	GetById(context.Context, *uuid.UUID) (types.User, error)
+	GetById(ctx context.Context, id *uuid.UUID) (types.User, error)
 }
 
 type UserService interface {
-	Create(context.Context, *types.User) (*uuid.UUID, error)
-	Update(context.Context, *types.User) error
-	UpdatePassword(context.Context, *types.User, *string, *string) error
-	GetByEmail(context.Context, *string) (types.User, error)
-	GetById(context.Context, *uuid.UUID) (types.User, error)
+	GetById(ctx context.Context, id *uuid.UUID) (types.User, error)
+	Update(ctx context.Context, user *types.User) error
+	UpdatePassword(ctx context.Context, user *types.User, oldPassword, newPassword string) error
 }
 
 type AuthService interface {
-	Signup(context.Context, *types.User) (*uuid.UUID, error)
-	Login(context.Context, *types.User) (*types.LoginResponse, error)
-	RefreshToken(context.Context, string) (types.JWTToken, error)
-}
-
-type Decoder interface {
-	Decode(any, map[string]string) error
-}
-
-type Validator interface {
-	Struct(any) error
-	StructCtx(context.Context, any) error
+	Signup(ctx context.Context, user *types.User, password string) (*uuid.UUID, error)
+	Login(ctx context.Context, email string, password string) (*types.LoginResponse, error)
+	RefreshToken(ctx context.Context, token string) (types.JWTToken, error)
 }

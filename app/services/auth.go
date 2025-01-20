@@ -24,25 +24,24 @@ func NewAuthService(store interfaces.UserStore, cfg *config.AppConfig) *AuthServ
 	}
 }
 
-func (a *AuthService) Signup(ctx context.Context, user *types.User) (*uuid.UUID, error) {
-	passwordHash, err := auth.HashPassword(user.Password, &auth.DefaultConf)
+func (a *AuthService) Signup(ctx context.Context, user *types.User, password string) (*uuid.UUID, error) {
+	passwordHash, err := auth.HashPassword(password, &auth.DefaultConf)
 	if err != nil {
 		return nil, err
 	}
-	user.Password = passwordHash
-	uid, err := a.store.Create(ctx, user)
+	uid, err := a.store.Create(ctx, user, passwordHash)
 	if err != nil {
 		return nil, err
 	}
 	return uid, nil
 }
 
-func (a *AuthService) Login(ctx context.Context, credentials *types.User) (*types.LoginResponse, error) {
-	user, err := a.store.GetByEmail(ctx, &credentials.Email)
+func (a *AuthService) Login(ctx context.Context, email, password string) (*types.LoginResponse, error) {
+	user, passwordHash, err := a.store.GetUserAndPasswordByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
-	err = auth.ValidatePassword(credentials.Password, user.Password)
+	err = auth.ValidatePassword(password, passwordHash)
 	if err != nil {
 		// bad request
 		slog.Info("couldn't validate password", "err", err)

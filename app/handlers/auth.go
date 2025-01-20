@@ -22,8 +22,7 @@ type UserLogin struct {
 
 func (u UserLogin) ToUser() *types.User {
 	return &types.User{
-		Email:    u.Email,
-		Password: u.Password,
+		Email: u.Email,
 	}
 }
 
@@ -36,7 +35,6 @@ type UserSignup struct {
 
 func (u UserSignup) ToUser() *types.User {
 	return &types.User{
-		Password:  u.Password,
 		Email:     u.Email,
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
@@ -116,7 +114,7 @@ func (h *AuthHandler) handleSignup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	uid, err := h.service.Signup(r.Context(), credentials.ToUser())
+	uid, err := h.service.Signup(r.Context(), credentials.ToUser(), credentials.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -142,7 +140,7 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	res, err := h.service.Login(r.Context(), credentials.ToUser())
+	res, err := h.service.Login(r.Context(), credentials.Email, credentials.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -156,7 +154,9 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   true,
 	})
-	w.Header().Set("Content-Type", "application/json")
+	headers := w.Header()
+	headers.Set("Content-Type", "application/json")
+	headers.Set("HX-Redirect", "/")
 	json.NewEncoder(w).Encode(map[string]any{
 		"token": res.AuthToken.Token,
 		"exp":   res.AuthToken.Exp,

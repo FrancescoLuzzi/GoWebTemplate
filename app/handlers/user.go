@@ -65,6 +65,7 @@ func (h *UserHandler) currentUser(w http.ResponseWriter, r *http.Request) (types
 	ctx := r.Context()
 	userId, err := auth.UserFromCtx(ctx)
 	if err != nil {
+		slog.Info("failed to get user by id", "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return types.User{}, err
 	}
@@ -75,7 +76,6 @@ func (h *UserHandler) currentUser(w http.ResponseWriter, r *http.Request) (types
 func (h *UserHandler) handleCurrentUserProfile(w http.ResponseWriter, r *http.Request) {
 	user, err := h.currentUser(w, r)
 	if err != nil {
-		slog.Info("failed to get user by id", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -128,11 +128,10 @@ func (h *UserHandler) handlePasswordUpdate(w http.ResponseWriter, r *http.Reques
 
 	user, err := h.currentUser(w, r)
 	if err != nil {
-		slog.Info("failed to get user by id", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.service.UpdatePassword(r.Context(), &user, &passwords.OldPassword, &passwords.NewPassword)
+	err = h.service.UpdatePassword(r.Context(), &user, passwords.OldPassword, passwords.NewPassword)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -141,7 +140,6 @@ func (h *UserHandler) handlePasswordUpdate(w http.ResponseWriter, r *http.Reques
 func (h *UserHandler) handleCurrentUserProfileView(w http.ResponseWriter, r *http.Request) {
 	user, err := h.currentUser(w, r)
 	if err != nil {
-		slog.Info("failed to get user by id", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
