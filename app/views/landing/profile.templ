@@ -1,39 +1,41 @@
 package landing
 
 import (
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/components"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/icons"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/layouts"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/ui"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/icons"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/components"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
 )
 
 templ Profile(user *types.User) {
 	@layouts.App() {
-		<div class="size-full flex flex-col">
-			<form hx-post="/user/profile" class="space-y-2 w-80 md:w-1/4 md:min-w-80">
-				<label class="input input-bordered flex items-center gap-2">
-					<input type="text" name="first_name" class="grow" placeholder="FirstName" value={ user.FirstName }/>
-				</label>
-				<label class="input input-bordered flex items-center gap-2">
-					<input type="text" name="last_name" class="grow" placeholder="LastName" value={ user.LastName }/>
-				</label>
-				<label class="input input-bordered flex items-center gap-2">
-					@icons.Postcard(ui.Class("size-4"))
-					<input type="text" name="email" class="grow" placeholder="Email" value={ user.Email }/>
-				</label>
-				<button class="btn" type="submit">Save</button>
-			</form>
-			<button class="btn max-w-52" onclick="passwordModal.showModal()">Change Password</button>
-			<dialog id="passwordModal" class="modal ">
-				<form id="#password-form" method="dialog" class="m-2 space-y-2 bg-base-300" hx-post="/user/password">
-					@components.InputPassword(components.NewPasswordProps("old_password", "current password"))
-					@components.InputPassword(components.NewPasswordProps("new_password", "new password"))
-					@components.InputConfirmPassword(components.NewConfirmPasswordProps("#new_password", "#password-form", "confirm new password"))
+		<div class="size-full flex justify-center">
+			<div class="flex flex-col space-y-2 w-80 md:w-1/4 md:min-w-80">
+				<form hx-post="/user/profile" class="space-y-2 w-80 md:w-1/4 md:min-w-80">
+					<label class="input input-bordered flex items-center gap-2">
+						<input type="text" name="first_name" class="grow" placeholder="FirstName" value={ user.FirstName }/>
+					</label>
+					<label class="input input-bordered flex items-center gap-2">
+						<input type="text" name="last_name" class="grow" placeholder="LastName" value={ user.LastName }/>
+					</label>
+					<label class="input input-bordered flex items-center gap-2">
+						@icons.Postcard(ui.Class("size-4"))
+						<input type="text" name="email" class="grow" placeholder="Email" value={ user.Email }/>
+					</label>
 					<button class="btn" type="submit">Save</button>
-					<button class="btn" onclick="event.preventDefault(); passwordModal.close()">Close</button>
 				</form>
-			</dialog>
+				<button class="btn max-w-52" onclick="passwordModal.showModal()">Change Password</button>
+				<dialog id="passwordModal" class="modal ">
+					<form id="#password-form" method="dialog" class="m-2 space-y-2 bg-base-300" hx-post="/user/password">
+						@components.InputPassword(components.NewPasswordProps("old_password", "current password"))
+						@components.InputPassword(components.NewPasswordProps("new_password", "new password"))
+						@components.InputConfirmPassword(components.NewConfirmPasswordProps("#new_password", "#password-form", "confirm new password"))
+						<button class="btn" type="submit">Save</button>
+						<button class="btn" onclick="event.preventDefault(); passwordModal.close()">Close</button>
+					</form>
+				</dialog>
+			</div>
 		</div>
 	}
 }
