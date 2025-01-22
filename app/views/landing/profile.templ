@@ -27,12 +27,14 @@ templ Profile(user *types.User) {
 				</form>
 				<button class="btn max-w-52" onclick="passwordModal.showModal()">Change Password</button>
 				<dialog id="passwordModal" class="modal ">
-					<form id="#password-form" method="dialog" class="m-2 space-y-2 bg-base-300" hx-post="/user/password">
+					<form id="#password-form" method="dialog" class="m-2 space-y-4" hx-post="/user/password">
 						@components.InputPassword(components.NewPasswordProps("old_password", "current password"))
 						@components.InputPassword(components.NewPasswordProps("new_password", "new password"))
 						@components.InputConfirmPassword(components.NewConfirmPasswordProps("#new_password", "#password-form", "confirm new password"))
-						<button class="btn" type="submit">Save</button>
-						<button class="btn" onclick="event.preventDefault(); passwordModal.close()">Close</button>
+						<div class="flex justify-evenly">
+							<button class="btn" type="submit">Save</button>
+							<button class="btn" onclick="event.preventDefault(); passwordModal.close()">Close</button>
+						</div>
 					</form>
 				</dialog>
 			</div>
