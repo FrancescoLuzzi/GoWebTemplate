@@ -11,6 +11,7 @@ import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/interfaces"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/middlewares"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
+	"github.com/FrancescoLuzzi/AQuickQuestion/app/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/schema"
 )
@@ -99,18 +100,8 @@ func (h *AuthHandler) RegisterRoutes(mux *http.ServeMux, md middlewares.Middlewa
 }
 
 func (h *AuthHandler) handleSignup(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	credentials, err := utils.ParseUrlEncoded[UserSignup](r, h.decoder, h.validate)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	var credentials UserSignup
-
-	if err = h.decoder.Decode(&credentials, r.PostForm); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if err = h.validate.StructCtx(r.Context(), &credentials); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -126,17 +117,8 @@ func (h *AuthHandler) handleSignup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	credentials, err := utils.ParseUrlEncoded[UserLogin](r, h.decoder, h.validate)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	var credentials UserLogin
-	if err = h.decoder.Decode(&credentials, r.PostForm); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if err := h.validate.Struct(&credentials); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

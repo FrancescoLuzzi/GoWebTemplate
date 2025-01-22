@@ -84,17 +84,8 @@ func (h *UserHandler) handleCurrentUserProfile(w http.ResponseWriter, r *http.Re
 }
 
 func (h *UserHandler) handleProfileUpdate(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	infos, err := utils.ParseUrlEncoded[UserUpdateInfos](r, h.decoder, h.validate)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	var infos UserUpdateInfos
-	if err = h.decoder.Decode(&infos, r.PostForm); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if err = h.validate.StructCtx(r.Context(), &infos); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -111,21 +102,11 @@ func (h *UserHandler) handleProfileUpdate(w http.ResponseWriter, r *http.Request
 }
 
 func (h *UserHandler) handlePasswordUpdate(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	passwords, err := utils.ParseUrlEncoded[UserUpdatePassword](r, h.decoder, h.validate)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var passwords UserUpdatePassword
-	if err = h.decoder.Decode(&passwords, r.PostForm); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if err = h.validate.StructCtx(r.Context(), &passwords); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	user, err := h.currentUser(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

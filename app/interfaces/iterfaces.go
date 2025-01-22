@@ -31,3 +31,10 @@ type AuthService interface {
 	Login(ctx context.Context, email string, password string) (*types.LoginResponse, error)
 	RefreshToken(ctx context.Context, token string) (types.JWTToken, error)
 }
+
+type Decoder interface {
+	Decode(dst any, src map[string][]string) error
+}
+type Validator interface {
+	StructCtx(ctx context.Context, value any) error
+}
