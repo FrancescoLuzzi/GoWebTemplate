@@ -12,6 +12,7 @@ import (
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/db"
 	"github.com/FrancescoLuzzi/AQuickQuestion/app/middlewares"
 	"github.com/FrancescoLuzzi/AQuickQuestion/public"
+	"github.com/gorilla/handlers"
 	"github.com/joho/godotenv"
 )
 
@@ -37,7 +38,12 @@ func main() {
 		log.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	appMux := middlewares.LoggingMiddleware(app.InitializeRoutes(conf, db))
+	cors := handlers.CORS(handlers.AllowedOrigins([]string{"*"}))
+	md := middlewares.Combine(
+		middlewares.LoggingMiddleware,
+		cors,
+	)
+	appMux := md(app.InitializeRoutes(conf, db))
 	mux.Handle("/", appMux)
 	mux.Handle("/public/assets/", public.FixCompressedContentHeaders(http.StripPrefix("/public/assets/", http.FileServerFS(public.AssetFs()))))
 
