@@ -5,12 +5,12 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/auth"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/interfaces"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/middlewares"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/utils"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/landing"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/auth"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/interfaces"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/middlewares"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/types"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/utils"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/views/landing"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/schema"
 )

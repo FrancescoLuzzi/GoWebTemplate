@@ -4,10 +4,10 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/auth"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/interfaces"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/auth"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/config"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/interfaces"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/types"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )

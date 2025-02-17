@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/app_ctx"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/app_ctx"
 )
 
 func HxRequestMiddleware(next http.Handler) http.Handler {

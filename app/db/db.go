@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/config"
 	_ "github.com/jackc/pgx/v5/stdlib" // PostgreSQL driver for sqlx
 	"github.com/jmoiron/sqlx"
 )

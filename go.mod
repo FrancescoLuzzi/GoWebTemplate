@@ -1,4 +1,4 @@
-module github.com/FrancescoLuzzi/AQuickQuestion
+module github.com/FrancescoLuzzi/GoWebTemplate
 
 go 1.23.3
 

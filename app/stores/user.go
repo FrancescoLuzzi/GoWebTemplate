@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/types"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )

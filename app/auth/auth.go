@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/app_ctx"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/utils"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/app_ctx"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/config"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/types"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )

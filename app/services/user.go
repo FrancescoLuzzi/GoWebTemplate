@@ -3,9 +3,9 @@ package services
 import (
 	"context"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/auth"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/interfaces"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/auth"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/interfaces"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/types"
 	"github.com/google/uuid"
 )
 

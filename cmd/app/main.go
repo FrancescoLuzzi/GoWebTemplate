@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/db"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/middlewares"
-	"github.com/FrancescoLuzzi/AQuickQuestion/public"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/config"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/db"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/middlewares"
+	"github.com/FrancescoLuzzi/GoWebTemplate/public"
 	"github.com/joho/godotenv"
 )
 

@@ -5,10 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/app_ctx"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/auth"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/interfaces"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/app_ctx"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/auth"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/config"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/interfaces"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )

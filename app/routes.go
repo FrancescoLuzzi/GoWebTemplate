@@ -3,13 +3,13 @@ package app
 import (
 	"net/http"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/config"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/handlers"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/middlewares"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/services"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/stores"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/utils"
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/views/landing"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/config"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/handlers"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/middlewares"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/services"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/stores"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/utils"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/views/landing"
 	"github.com/jmoiron/sqlx"
 )
 

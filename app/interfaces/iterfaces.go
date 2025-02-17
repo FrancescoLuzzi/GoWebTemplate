@@ -3,7 +3,7 @@ package interfaces
 import (
 	"context"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/types"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/types"
 	"github.com/google/uuid"
 )
 

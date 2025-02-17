@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/FrancescoLuzzi/AQuickQuestion/app/interfaces"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/interfaces"
 )
 
 func ParseUrlEncoded[T any](r *http.Request, decoder interfaces.Decoder, validator interfaces.Validator) (T, error) {
