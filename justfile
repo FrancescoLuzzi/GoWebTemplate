@@ -28,7 +28,7 @@ dev:
 
 setup-dev-env:
     @go install github.com/air-verse/air@latest
-    @go install github.com/a-h/templ/cmd/templ@latest
+    @go install github.com/a-h/templ/cmd/templ@v0.3.856
     @go install github.com/pressly/goose/v3/cmd/goose@latest
     @go mod tidy
     @npm i
