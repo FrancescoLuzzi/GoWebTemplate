@@ -7,4 +7,4 @@ INSERT INTO users(id,email,firstName,lastName,password) VALUES
 
 -- +goose Down
 
-SELECT 'down SQL query';
+DELETE FROM users WHERE id = 'be1d078b-827b-438c-bd95-fbb5627115c3';
