@@ -57,6 +57,10 @@ type ServerConfig struct {
 	LogLevel *slog.LevelVar
 }
 
+func (s *ServerConfig) ServeAddr() string {
+	return fmt.Sprintf(":%s", s.Port)
+}
+
 type AppConfig struct {
 	JWTConfig
 	ServerConfig

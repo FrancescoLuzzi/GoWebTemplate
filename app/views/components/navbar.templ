@@ -1,14 +1,14 @@
 package components
 
 import (
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/app_ctx"
 	"github.com/FrancescoLuzzi/GoWebTemplate/app/views/icons"
 	"github.com/FrancescoLuzzi/GoWebTemplate/app/views/ui"
-	"github.com/FrancescoLuzzi/GoWebTemplate/app/app_ctx"
 )
 
 templ Navbar() {
 	{{ user := app_ctx.LoggedUser(ctx) }}
-	<div class="navbar bg-base-100">
+	<div class="navbar bg-base-100 shadow-sm">
 		<div class="navbar-start">
 			<div class="dropdown">
 				<div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
@@ -16,7 +16,7 @@ templ Navbar() {
 				</div>
 				<ul
 					tabindex="0"
-					class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+					class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
 				>
 					<li><a hx-get="/home" hx-target="#viewport">Home</a></li>
 				</ul>
@@ -24,12 +24,12 @@ templ Navbar() {
 			<a class="btn btn-ghost text-xl" hx-get="/" hx-target="#viewport">Template</a>
 		</div>
 		<div class="navbar-center hidden lg:flex">
-			<ul class="menu menu-horizontal px-1">
+			<ul class="menu menu-horizontal px-1 z-1">
 				<li><a hx-get="/home" hx-target="#viewport">Home</a></li>
 				<li>
 					<details>
 						<summary>Parent</summary>
-						<ul class="p-2">
+						<ul class="min-w-28 p-2">
 							<li><a>Submenu 1</a></li>
 							<li><a>Submenu 2</a></li>
 						</ul>
@@ -38,14 +38,14 @@ templ Navbar() {
 			</ul>
 		</div>
 		<div class="navbar-end">
-			if user !=nil {
+			if user != nil {
 				<div class="dropdown dropdown-end">
 					<div tabindex="0" role="button" class="btn btn-ghost">
 						@icons.UserFull(ui.Class("size-6"))
 					</div>
 					<ul
 						tabindex="0"
-						class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+						class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 min-w-16 p-2 shadow"
 					>
 						<li><a hx-get="/profile" hx-target="#viewport">Profile</a></li>
 						<li><a hx-post="/auth/logout">Logout</a></li>
@@ -56,7 +56,7 @@ templ Navbar() {
 					id="sign-in"
 					hx-get="/login"
 					hx-target="#viewport"
-					class="cursor-pointer text-gray-500 dark:text-gray-400 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2"
+					class="btn btn-ghost font-semibold text-sm p-2 rounded-lg"
 				>
 					Sign in
 				</a>
@@ -64,7 +64,7 @@ templ Navbar() {
 					id="sign-in"
 					hx-get="/signup"
 					hx-target="#viewport"
-					class="cursor-pointer text-gray-500 dark:text-gray-400 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2"
+					class="btn btn-ghost font-semibold text-sm p-2 rounded-lg"
 				>
 					Sign up
 				</a>

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"log/slog"
@@ -40,6 +41,6 @@ func main() {
 	appMux := middlewares.LoggingMiddleware(app.InitializeRoutes(conf, db))
 	mux.Handle("/", appMux)
 	mux.Handle("/public/assets/", public.FixCompressedContentHeaders(http.StripPrefix("/public/assets/", http.FileServerFS(public.AssetFs()))))
-
-	http.ListenAndServe(":8080", mux)
+	fmt.Printf("Starting server %s:%s\n", conf.ServerConfig.Host, conf.ServerConfig.Port)
+	http.ListenAndServe(conf.ServeAddr(), mux)
 }

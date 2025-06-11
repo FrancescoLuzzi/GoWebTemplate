@@ -11,6 +11,7 @@ build-frontend:
     @templ generate
     @npm run build
 
+[private]
 build-air: build-frontend
     @go build -o ./tmp_air/main.exe "{{ app_dir }}/main.go"
 
