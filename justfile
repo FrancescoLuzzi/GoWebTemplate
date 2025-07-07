@@ -2,7 +2,7 @@ set windows-powershell := true
 set dotenv-load
 set dotenv-required
 
-app_dir := "./cmd/app"
+app_dir := "./cmd/server"
 
 default:
     @just --list
@@ -28,16 +28,19 @@ dev:
     @air -c scripts/air.toml
 
 setup-dev-env:
-    @go install github.com/air-verse/air@latest
+    @go install github.com/air-verse/air@v1.61.5
     @go install github.com/a-h/templ/cmd/templ@v0.3.856
-    @go install github.com/pressly/goose/v3/cmd/goose@latest
+    @go install github.com/pressly/goose/v3/cmd/goose@v3.24.1
     @go mod tidy
     @npm i
 
-db-up:
+build-docker tag:
+    @ docker build -t {{tag}} -f docker/Dockerfile .
+
+compose-up:
     @docker compose -f docker/docker-compose.yaml up -d
 
-db-down:
+compose-down:
     @docker compose -f docker/docker-compose.yaml down
 
 db-migrate:
