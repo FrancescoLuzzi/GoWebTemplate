@@ -38,7 +38,7 @@ build-docker tag:
     @ docker build -t {{tag}} -f docker/Dockerfile .
 
 compose-up:
-    @docker compose -f docker/docker-compose.yaml up -d
+    @docker compose -f docker/docker-compose.yaml up
 
 compose-down:
     @docker compose -f docker/docker-compose.yaml down

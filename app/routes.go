@@ -3,6 +3,7 @@ package app
 import (
 	"net/http"
 
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/cache"
 	"github.com/FrancescoLuzzi/GoWebTemplate/app/config"
 	"github.com/FrancescoLuzzi/GoWebTemplate/app/handlers"
 	"github.com/FrancescoLuzzi/GoWebTemplate/app/middlewares"
@@ -13,7 +14,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func InitializeRoutes(conf config.AppConfig, db *sqlx.DB) *http.ServeMux {
+func InitializeRoutes(conf config.AppConfig, cache cache.Cache, db *sqlx.DB) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	userStore := stores.NewUserStore(db)
@@ -25,8 +26,10 @@ func InitializeRoutes(conf config.AppConfig, db *sqlx.DB) *http.ServeMux {
 	userHandler := handlers.NewUserHandler(userService)
 
 	authMiddleware := middlewares.NewAuthMiddleware(userStore, &conf.JWTConfig)
+	cacheMiddleware := middlewares.CacheInjectorMiddleware(cache)
 
 	md := middlewares.Combine(
+		cacheMiddleware,
 		middlewares.HxRequestMiddleware,
 		authMiddleware,
 	)

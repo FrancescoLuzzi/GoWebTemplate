@@ -13,6 +13,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type CacheConfig struct {
+	Host     string
+	Port     string
+	Username string
+	Password string
+	DB       int
+	PoolSize int
+}
+
 type DbConfig struct {
 	Host     string
 	Port     string
@@ -65,6 +74,7 @@ type AppConfig struct {
 	JWTConfig
 	ServerConfig
 	DbConfig
+	CacheConfig
 }
 
 func getEnv(key, fallback string) string {
@@ -107,7 +117,7 @@ func jwtFromEnv() JWTConfig {
 	}
 }
 
-// LoadConfigFromEnv loads database configuration from environment variables.
+// load database configuration from environment variables.
 func dbFromEnv() DbConfig {
 	return DbConfig{
 		Host:     getEnv("DB_HOST", "localhost"),
@@ -116,6 +126,18 @@ func dbFromEnv() DbConfig {
 		Password: getEnv("DB_PASSWORD", "Password123!"),
 		User:     getEnv("DB_USER", "user"),
 		SSLMode:  getEnv("DB_SSLMODE", "prefer"),
+	}
+}
+
+// load cache configuration from environment variables.
+func cacheFromEnv() CacheConfig {
+	return CacheConfig{
+		Host:     getEnv("CACHE_HOST", "localhost"),
+		Port:     getEnv("CACHE_PORT", "5432"),
+		Username: getEnv("CACHE_USERNAME", "default"),
+		Password: getEnv("CACHE_PASSWORD", "redispw"),
+		DB:       int(getEnvAsInt64("CACHE_DB", 0)),
+		PoolSize: int(getEnvAsInt64("CACHE_POOL_SIZE", 10)),
 	}
 }
 
@@ -164,6 +186,7 @@ func Config() AppConfig {
 			JWTConfig:    jwtFromEnv(),
 			ServerConfig: serverFromEnv(),
 			DbConfig:     dbFromEnv(),
+			CacheConfig:  cacheFromEnv(),
 		}
 	})
 	return config

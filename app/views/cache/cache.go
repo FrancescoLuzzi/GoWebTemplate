@@ -3,62 +3,84 @@ package cache
 import (
 	"bytes"
 	"context"
+	"encoding"
 	"io"
+	"log/slog"
 	"time"
 
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/app_ctx"
 	"github.com/a-h/templ"
-	"github.com/hashicorp/golang-lru/v2"
 )
 
-// golang-lru is thread safe
-var cacheKeyToContent, _ = lru.New[string, cacheContent](16)
-
-type cacheContent struct {
-	expireAt time.Time
-	content  []byte
+type cachedPage struct {
+	key string
+	ttl time.Duration
 }
 
-type cacheComponent struct {
-	cacheDuration time.Duration
-	key           string
+type pageCacheValue struct {
+	buf bytes.Buffer
 }
 
-func (c cacheComponent) Render(ctx context.Context, w io.Writer) error {
-	// Get children.
+var _ encoding.BinaryUnmarshaler = &pageCacheValue{}
+var _ encoding.BinaryMarshaler = &pageCacheValue{}
+
+// MarshalBinary implements encoding.BinaryMarshaler.
+func (c *pageCacheValue) MarshalBinary() (data []byte, err error) {
+	return c.buf.Bytes(), nil
+}
+
+// UnmarshalBinary implements encoding.BinaryUnmarshaler.
+func (c *pageCacheValue) UnmarshalBinary(data []byte) error {
+	fullDataLen := len(data)
+	var err error
+	for tmpWrite, err := c.buf.Write(data); err != nil && fullDataLen-tmpWrite > 0; {
+		fullDataLen -= tmpWrite
+		data = data[tmpWrite:]
+	}
+	return err
+}
+
+func (c *cachedPage) Render(ctx context.Context, w io.Writer) error {
+	cache := app_ctx.Cache(ctx)
+	slog.Info("Rendering cached page", "key", c.key, "ttl", c.ttl, "cache", cache != nil)
 	children := templ.GetChildren(ctx)
 	ctx = templ.ClearChildren(ctx)
 	if children == nil {
 		return nil
 	}
-	cc, isCached := cacheKeyToContent.Get(c.key)
-	if isCached {
-		if cc.expireAt.After(time.Now()) {
-			_, err := w.Write(cc.content)
-			return err
-		} else {
-			cacheKeyToContent.Remove(c.key)
-		}
+	if cache == nil {
+		return children.Render(ctx, w)
+	}
+	page := pageCacheValue{}
+	err := cache.Get(ctx, c.key, &page)
+	if err == nil {
+		slog.Info("Cache hit", "key", c.key, "ttl", c.ttl, "page_length", page.buf.Len())
+		_, err := w.Write(page.buf.Bytes())
+		return err
 	}
 	// Render children to a buffer.
-	var buf bytes.Buffer
-	err := children.Render(ctx, &buf)
+	err = children.Render(ctx, &page.buf)
 	if err != nil {
 		return err
 	}
 	// Cache the result.
-	cacheKeyToContent.Add(c.key, cacheContent{
-		expireAt: time.Now().Add(c.cacheDuration),
-		content:  buf.Bytes(),
-	})
+	cache.Set(ctx, c.key, &page, c.ttl)
+	slog.Info("Cache miss", "key", c.key, "ttl", c.ttl, "page_length", page.buf.Len())
 	// Write the result to the output.
-	_, err = w.Write(buf.Bytes())
+	_, err = w.Write(page.buf.Bytes())
 	return err
 }
 
 // Cache a component by key for a specific duration
+//
+// Example usage:
+//
+//	templ.Cache("my-key", 5*time.Minute){
+//			<p> Hello World </p>
+//	}
 func Cache(key string, duration time.Duration) templ.Component {
-	return cacheComponent{
-		cacheDuration: duration,
-		key:           key,
+	return &cachedPage{
+		key: key,
+		ttl: duration,
 	}
 }

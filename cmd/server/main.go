@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/FrancescoLuzzi/GoWebTemplate/app"
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/cache"
 	"github.com/FrancescoLuzzi/GoWebTemplate/app/config"
 	"github.com/FrancescoLuzzi/GoWebTemplate/app/db"
 	"github.com/FrancescoLuzzi/GoWebTemplate/app/middlewares"
@@ -18,7 +19,7 @@ import (
 
 func init() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal(err)
+		slog.Warn("can't load env file", "err", err)
 	}
 }
 
@@ -37,8 +38,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	cacheDd, err := cache.NewCache(conf.CacheConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
 	mux := http.NewServeMux()
-	appMux := middlewares.LoggingMiddleware(app.InitializeRoutes(conf, db))
+	appMux := middlewares.LoggingMiddleware(app.InitializeRoutes(conf, cacheDd, db))
 	mux.Handle("/", appMux)
 	mux.Handle("/public/assets/", public.FixCompressedContentHeaders(http.StripPrefix("/public/assets/", http.FileServerFS(public.AssetFs()))))
 	fmt.Printf("Starting server %s:%s\n", conf.ServerConfig.Host, conf.ServerConfig.Port)

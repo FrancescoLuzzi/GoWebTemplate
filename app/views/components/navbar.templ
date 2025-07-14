@@ -39,13 +39,13 @@ templ Navbar() {
 		</div>
 		<div class="navbar-end">
 			if user != nil {
-				<div class="dropdown dropdown-end">
+				<div class="dropdown dropdown-hover">
 					<div tabindex="0" role="button" class="btn btn-ghost">
 						@icons.UserFull(ui.Class("size-6"))
 					</div>
 					<ul
 						tabindex="0"
-						class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 min-w-16 p-2 shadow"
+						class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 min-w-16 p-2 shadow"
 					>
 						<li><a hx-get="/profile" hx-target="#viewport">Profile</a></li>
 						<li><a hx-post="/auth/logout">Logout</a></li>

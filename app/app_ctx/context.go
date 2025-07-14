@@ -3,13 +3,24 @@ package app_ctx
 import (
 	"context"
 
+	"github.com/FrancescoLuzzi/GoWebTemplate/app/cache"
 	"github.com/google/uuid"
 )
 
 type contextKey string
 
-var LayoutCtxKey contextKey = "showTemplLayout"
-var UserCtxKey contextKey = "loggedUser"
+const (
+	LayoutCtxKey contextKey = "showTemplLayout"
+	UserCtxKey   contextKey = "loggedUser"
+	CacheCtxKey  contextKey = "cacheService"
+)
+
+func Cache(ctx context.Context) cache.Cache {
+	if cache, ok := ctx.Value(CacheCtxKey).(cache.Cache); ok {
+		return cache
+	}
+	return nil
+}
 
 func ShowLayout(ctx context.Context) bool {
 	if hasHxRequest, ok := ctx.Value(LayoutCtxKey).(bool); ok {
