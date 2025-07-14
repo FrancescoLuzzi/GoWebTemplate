@@ -17,4 +17,4 @@ WORKDIR /server
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /server/server /server/server
 EXPOSE 8080
-CMD [ "./app" ]
+CMD [ "./server" ]
